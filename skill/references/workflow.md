@@ -9,3 +9,10 @@ FanIQ is built around a demo-safe creator intelligence pipeline.
 5. `/publish/{creator}` writes an agent-consumable report.
 
 The core demo can run from seeded data. Live integrations add sponsor depth but should not block the flow.
+
+Optional Ghost Build depth:
+
+1. Install Ghost CLI manually.
+2. Run `ghost login`.
+3. Run `ghost mcp install`.
+4. Use FanIQ's Ghost readiness check before pitching Ghost as live.

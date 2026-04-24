@@ -1,6 +1,7 @@
 const state = {
   creator: "@lexfridman",
   fans: [],
+  totalFans: 0,
   selected: null,
   eventSource: null,
 };
@@ -25,6 +26,7 @@ const els = {
   publishStatus: document.querySelector("#publish-status"),
   publishLog: document.querySelector("#publish-log"),
   sponsorTrace: document.querySelector("#sponsor-trace"),
+  memoryResults: document.querySelector("#memory-results"),
 };
 
 function normalizeHandle(value) {
@@ -58,7 +60,7 @@ function addEventRow(event) {
 }
 
 function renderLeaderboard() {
-  els.fanCount.textContent = `${state.fans.length} fans`;
+  els.fanCount.textContent = `${state.totalFans || state.fans.length} fans`;
   if (!state.fans.length) {
     els.leaderboard.innerHTML = `<div class="empty">No fan data yet. Click Scan or load seed data.</div>`;
     renderDetail(null);
@@ -153,10 +155,16 @@ function renderDetail(fan) {
 
 async function loadFans() {
   state.creator = normalizeHandle(els.creator.value);
-  const response = await fetch(`/fans/${encodeURIComponent(state.creator)}`);
-  if (!response.ok) return;
-  const data = await response.json();
+  let data;
+  try {
+    const response = await fetch(`/fans/${encodeURIComponent(state.creator)}?limit=15`);
+    if (!response.ok) return;
+    data = await response.json();
+  } catch {
+    return;
+  }
   state.fans = data.top_fans || [];
+  state.totalFans = data.total_fans || state.fans.length;
   if (state.selected && !state.fans.some((fan) => fan.handle === state.selected.handle)) {
     state.selected = null;
   }
@@ -164,11 +172,28 @@ async function loadFans() {
 }
 
 async function loadEvents() {
-  const response = await fetch(`/events/${encodeURIComponent(state.creator)}`);
-  if (!response.ok) return;
-  const data = await response.json();
+  let data;
+  try {
+    const response = await fetch(`/events/${encodeURIComponent(state.creator)}`);
+    if (!response.ok) return;
+    data = await response.json();
+  } catch {
+    return;
+  }
   renderSponsorTrace(data.sponsor_trace || []);
   renderPublish(data.publish);
+}
+
+async function loadMemory(query = "AI research episode top fans") {
+  let data;
+  try {
+    const response = await fetch(`/memory/${encodeURIComponent(state.creator)}/search?q=${encodeURIComponent(query)}`);
+    if (!response.ok) return;
+    data = await response.json();
+  } catch {
+    return;
+  }
+  renderMemoryResults(data.results || []);
 }
 
 function renderSponsorTrace(trace) {
@@ -183,6 +208,23 @@ function renderSponsorTrace(trace) {
         <strong>${escapeHtml(row.sponsor || "Sponsor")}</strong>
         <span>${escapeHtml(row.operation || "")}</span>
         <div>${escapeHtml(row.detail || "")}</div>
+      </div>
+    `)
+    .join("");
+}
+
+function renderMemoryResults(results) {
+  if (!results.length) {
+    els.memoryResults.innerHTML = `<div class="empty">Redis memory snippets appear after fan comments are indexed.</div>`;
+    return;
+  }
+  els.memoryResults.innerHTML = results
+    .slice(0, 5)
+    .map((row) => `
+      <div class="trace-item memory-item">
+        <strong>${escapeHtml(row.display_name || row.fan_handle)}</strong>
+        <span>${escapeHtml((row.matched_terms || []).join(", ") || "context")}</span>
+        <div>${escapeHtml(row.content || "")}</div>
       </div>
     `)
     .join("");
@@ -273,6 +315,7 @@ async function askFanIQ() {
   });
   const data = await response.json();
   els.answer.textContent = data.choices?.[0]?.message?.content || "No answer returned.";
+  await loadMemory("Who are my top three fans and what should I do with them?");
   await loadEvents();
 }
 
@@ -291,6 +334,6 @@ els.ask.addEventListener("click", askFanIQ);
 els.publish.addEventListener("click", publishReport);
 
 checkHealth();
-loadFans().then(loadEvents);
+loadFans().then(loadEvents).then(() => loadMemory());
 setInterval(checkHealth, 7000);
 setInterval(loadEvents, 5000);

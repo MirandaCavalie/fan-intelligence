@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from urllib.parse import quote
 from typing import Any
 
 import redis.asyncio as redis
@@ -23,9 +24,26 @@ def dumps(value: Any) -> str:
     return json.dumps(value, default=_json_default, separators=(",", ":"))
 
 
+def redis_url_from_env() -> str:
+    url = os.getenv("REDIS_URL")
+    if url:
+        return url
+
+    host = os.getenv("REDIS_HOST")
+    if not host:
+        return "redis://localhost:6379"
+
+    port = os.getenv("REDIS_PORT", "6379")
+    username = quote(os.getenv("REDIS_USERNAME", "default"), safe="")
+    password = quote(os.getenv("REDIS_PASSWORD", ""), safe="")
+    scheme = "rediss" if os.getenv("REDIS_SSL", "false").lower() in {"1", "true", "yes"} else "redis"
+    auth = f"{username}:{password}@" if password else f"{username}@"
+    return f"{scheme}://{auth}{host}:{port}"
+
+
 class RedisService:
     def __init__(self, url: str | None = None) -> None:
-        self.url = url or os.getenv("REDIS_URL", "redis://localhost:6379")
+        self.url = url or redis_url_from_env()
         self._client: redis.Redis | None = None
 
     @property
@@ -45,12 +63,17 @@ class RedisService:
     async def clear_creator(self, creator_handle: str) -> None:
         creator = normalize_handle(creator_handle)
         profile_keys = await self.client.keys(f"fan_profile:{creator}:*")
+        memory_keys = await self.client.keys(f"fan_memory:{creator}:*")
+        memory_index_keys = await self.client.keys(f"fan_memory_index:{creator}:*")
         keys = [
             f"fans:{creator}",
             f"events:{creator}",
             f"sponsor_trace:{creator}",
             f"publish:{creator}",
+            f"fan_memory_scores:{creator}",
             *profile_keys,
+            *memory_keys,
+            *memory_index_keys,
         ]
         if keys:
             await self.client.delete(*keys)
@@ -59,8 +82,13 @@ class RedisService:
         creator = normalize_handle(profile.creator_handle)
         fan = normalize_handle(profile.handle)
         data = profile.model_dump(mode="json")
-        await self.client.zadd(f"fans:{creator}", {fan: profile.score})
-        await self.client.set(f"fan_profile:{creator}:{fan}", dumps(data))
+        pipe = self.client.pipeline(transaction=False)
+        pipe.zadd(f"fans:{creator}", {fan: profile.score})
+        pipe.set(f"fan_profile:{creator}:{fan}", dumps(data))
+        await pipe.execute()
+        from services.redis_ai import store_fan_memory
+
+        await store_fan_memory(self, profile)
         await self.push_event(
             creator,
             ScanEvent(

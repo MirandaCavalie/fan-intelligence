@@ -10,6 +10,8 @@ This folder is the working control room for the hackathon build. Root markdown f
 4. `SPONSOR_INTEGRATION_PLAN.md` - exact MVP path for TinyFish, Redis, Vapi, cited.md/Senso, Shipables, and Ghost/TigerData.
 5. `API_CONTRACTS.md` - endpoint and payload contracts to implement.
 6. `IMPLEMENTATION_CUTS.md` - what to cut first when time gets tight.
+7. `REDIS_AI_INCUBATOR.md` - Redis Cloud and agent memory notes.
+8. `GHOST_BUILD_SETUP.md` - optional Ghost Build / MCP setup.
 
 ## Current Product Decision
 
@@ -24,4 +26,3 @@ The demo should prove:
 - Shipables can package the workflow as a reusable skill.
 
 Everything else is optional.
-

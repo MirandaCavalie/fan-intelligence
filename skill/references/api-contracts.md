@@ -9,6 +9,7 @@ Core endpoints:
 - `GET /fan/{creator_handle}/{fan_handle}`
 - `POST /vapi/llm`
 - `POST /publish/{creator_handle}`
+- `GET /memory/{creator_handle}/search?q=...`
 
 Redis keys:
 
@@ -19,3 +20,6 @@ Redis keys:
 - `scan_events:{job_id}`
 - `publish:{creator}`
 - `sponsor_trace:{creator}`
+- `fan_memory:{creator}:{fan}:{index}`
+- `fan_memory_scores:{creator}`
+- `fan_memory_index:{creator}:{token}`

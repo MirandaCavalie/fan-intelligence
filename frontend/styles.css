@@ -156,7 +156,7 @@ button:hover {
 
 .trace-row {
   display: grid;
-  grid-template-columns: 1fr 1.3fr;
+  grid-template-columns: 0.9fr 1.1fr 1.1fr;
   gap: 14px;
   padding: 0 14px 14px;
 }
@@ -396,7 +396,7 @@ h2 {
 
 .trace-item {
   display: grid;
-  grid-template-columns: 120px 130px 1fr;
+  grid-template-columns: 120px 120px 1fr;
   gap: 10px;
   align-items: baseline;
   border-bottom: 1px solid var(--line);
@@ -410,6 +410,10 @@ h2 {
 
 .trace-item span {
   color: var(--accent);
+}
+
+.memory-item {
+  grid-template-columns: 130px 90px 1fr;
 }
 
 .empty {

@@ -17,14 +17,15 @@ async def main() -> None:
     parser.add_argument("--clear", action="store_true", help="Clear existing creator data before seeding.")
     args = parser.parse_args()
 
+    creator = args.creator
     if args.clear:
-        await redis_service.clear_creator(args.creator)
+        await redis_service.clear_creator(creator)
 
-    fans = demo_fans(args.creator)
+    fans = demo_fans(creator)
     for fan in fans:
         await redis_service.upsert_fan(fan)
-    top = await redis_service.list_top_fans(args.creator, limit=3)
-    print(f"Seeded {len(fans)} fans for {args.creator} - leaderboard ready")
+    top = await redis_service.list_top_fans(creator, limit=3)
+    print(f"Seeded {len(fans)} fans for {creator} - leaderboard ready")
     for fan in top:
         print(f"{fan.score:>4}  {fan.handle:<20} {fan.display_name}")
     await redis_service.close()

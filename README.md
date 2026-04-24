@@ -55,7 +55,9 @@ The root docs are the public project narrative. The implementation control room 
 - [`docs/SPONSOR_DOCS_NOTES.md`](docs/SPONSOR_DOCS_NOTES.md) - official-docs-driven integration notes
 - [`docs/SPONSOR_INTEGRATION_PLAN.md`](docs/SPONSOR_INTEGRATION_PLAN.md) - MVP sponsor plan and fallbacks
 - [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md) - backend/API contracts
+- [`docs/REDIS_AI_INCUBATOR.md`](docs/REDIS_AI_INCUBATOR.md) - Redis Cloud + agent memory layer
 - [`docs/IMPLEMENTATION_CUTS.md`](docs/IMPLEMENTATION_CUTS.md) - cut order if time gets tight
+- [`docs/GHOST_BUILD_SETUP.md`](docs/GHOST_BUILD_SETUP.md) - optional Ghost Build / MCP setup
 
 ## Repo structure
 
@@ -90,6 +92,14 @@ uvicorn main:app --reload --port 8000
 
 # Open http://localhost:8000
 ```
+
+Optional Ghost Build check:
+
+```bash
+python scripts/test_ghost_build.py
+```
+
+Redis Cloud can be configured with `REDIS_URL` or the split `REDIS_HOST`, `REDIS_PORT`, `REDIS_USERNAME`, `REDIS_PASSWORD`, and `REDIS_SSL` variables from `.env.example`.
 
 ## The cited.md layer
 

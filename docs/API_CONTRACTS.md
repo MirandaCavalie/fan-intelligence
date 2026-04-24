@@ -175,6 +175,32 @@ POST /vapi/llm
 
 The endpoint should inject Redis fan data into the model context and return an OpenAI-compatible response.
 
+## Redis AI Memory Search
+
+```text
+GET /memory/{creator_handle}/search?q=AI%20research
+```
+
+Response:
+
+```json
+{
+  "creator_handle": "@lexfridman",
+  "query": "AI research",
+  "results": [
+    {
+      "fan_handle": "@airesearcher_sf",
+      "display_name": "Alex Chen",
+      "content": "The scaling laws episode clarified why evals need to move faster than capability gains.",
+      "match_score": 949,
+      "matched_terms": ["research"]
+    }
+  ]
+}
+```
+
+This is the Redis AI Incubator-inspired memory layer for the demo. It uses Redis-native keys and can later be upgraded to RedisVL or vector search.
+
 ## Publish
 
 ```text
@@ -219,4 +245,3 @@ Response:
   "suggested_action": "what creator should do next"
 }
 ```
-

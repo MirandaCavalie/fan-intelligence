@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>FanIQ</title>
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/styles.css?v=redis-ai" />
   </head>
   <body>
     <div class="app-shell">
@@ -85,14 +85,22 @@
 
         <section class="panel sponsor-panel">
           <div class="panel-head">
+            <h2>Redis AI memory</h2>
+            <div id="memory-status" class="status-text">Agent Memory - context search</div>
+          </div>
+          <div id="memory-results" class="trace-list"></div>
+        </section>
+
+        <section class="panel sponsor-panel">
+          <div class="panel-head">
             <h2>Sponsor trace</h2>
-            <div id="sponsor-status" class="status-text">TinyFish · Redis · Vapi · Shipables</div>
+            <div class="status-text">TinyFish - Redis - Vapi - Shipables</div>
           </div>
           <div id="sponsor-trace" class="trace-list"></div>
         </section>
       </footer>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=redis-ai"></script>
   </body>
 </html>
