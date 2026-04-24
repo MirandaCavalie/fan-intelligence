@@ -77,14 +77,14 @@ without requiring API access to any platform."
 
 | Sponsor | Usage depth | Visible in demo? |
 |---|---|---|
-| Tinyfish | Core data acquisition — no fallback | Yes — SSE stream |
+| Tinyfish | Core data acquisition, with seeded demo fallback | Yes — SSE stream |
 | Ghost/TigerData | Primary persistence layer | Yes — fan cards |
-| Redis | Core scoring engine — no fallback | Yes — live leaderboard |
+| Redis | Core scoring engine and leaderboard | Yes — live leaderboard |
 | Vapi | Primary UX — both voice modes | Yes — voice calls |
 | cited.md/Senso | Monetization + publication | Yes — payment log |
 | Shipables.dev | Skill installed + published | Mention in pitch |
 
-**This is 6 sponsor tools — well above the minimum of 3.**
+**Minimum viable sponsor stack:** Tinyfish, Redis, Vapi, and Shipables. Ghost/TigerData and cited.md/Senso add depth if they are stable before demo rehearsal.
 
 ---
 
@@ -142,13 +142,13 @@ structured research database that feeds our entire intelligence pipeline."
 
 ## cited.md requirement
 
-**What's required:** Publish agent output to cited.md. Wire payment rails.
+**What to verify on-site:** Publish agent output to cited.md and wire payment rails if sponsor instructions require it and credentials are ready.
 
 **Our implementation:**
 1. After each fan profile is written to Ghost, trigger `services/cited.py`
 2. Publish a structured fan profile document to cited.md via Senso API
-3. Set x402 payment requirement on each profile fetch
-4. Show the earnings log in the demo
+3. Set x402 payment requirement on each profile fetch if the live payment rail is ready
+4. Show the publish log in the demo; show earnings only if real
 
 **Setup:** docs.senso.ai/docs/hello-world — complete this in the first 30 minutes of setup.
 

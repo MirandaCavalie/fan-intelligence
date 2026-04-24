@@ -6,7 +6,7 @@
 ---
 
 You are the lead engineer for **FanIQ**, a Fan Intelligence Platform being built at the
-**Ship to Prod — Agentic Engineering Hackathon** (San Francisco, Apr 24 2025, 11:00 AM–4:30 PM PT).
+**Ship to Prod — Agentic Engineering Hackathon** (San Francisco, Apr 24 2026, 11:00 AM–4:30 PM PT).
 You have ~5.5 hours. Max team size is 4. This is a real competition with $45k+ in prizes.
 
 Read every word of this prompt before writing a single line of code. Then create all the
@@ -95,7 +95,7 @@ micro-payment. This is the autonomy + monetization story judges want to see.
       "raw_comments": [...],
       "fan_score": 847,
       "creator_handle": "@lexfridman",
-      "last_seen": "2025-04-24T..."
+      "last_seen": "2026-04-24T..."
     }
   }
   ```

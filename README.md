@@ -40,6 +40,17 @@ A creator enters their handle. FanIQ's Tinyfish web agent crawls X and LinkedIn 
 | Publication | cited.md via Senso context layer |
 | Transport | ngrok (dev), WebSocket for live updates |
 
+## Hackathon docs
+
+The root docs are the public project narrative. The implementation control room lives in [`docs/`](docs/README.md):
+
+- [`docs/DEMO_SCOPE.md`](docs/DEMO_SCOPE.md) - demo-first scope lock
+- [`docs/ROOT_MD_AUDIT.md`](docs/ROOT_MD_AUDIT.md) - markdown audit and recommended cuts
+- [`docs/SPONSOR_DOCS_NOTES.md`](docs/SPONSOR_DOCS_NOTES.md) - official-docs-driven integration notes
+- [`docs/SPONSOR_INTEGRATION_PLAN.md`](docs/SPONSOR_INTEGRATION_PLAN.md) - MVP sponsor plan and fallbacks
+- [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md) - backend/API contracts
+- [`docs/IMPLEMENTATION_CUTS.md`](docs/IMPLEMENTATION_CUTS.md) - cut order if time gets tight
+
 ## Repo structure
 
 ```
@@ -115,4 +126,4 @@ This is what makes FanIQ an **agentic** product, not just a tool.
 
 ---
 
-*Built at Ship to Prod — Agentic Engineering Hackathon, San Francisco, Apr 24 2025*
+*Built at Ship to Prod — Agentic Engineering Hackathon, San Francisco, Apr 24 2026*

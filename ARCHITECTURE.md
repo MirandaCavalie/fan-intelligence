@@ -138,7 +138,7 @@ class EngagementEvent(BaseModel):
   "creator_handle": "@lexfridman",
   "job_title": "AI Researcher",
   "company": "Google",
-  "last_seen": "2025-04-24T14:30:00Z",
+  "last_seen": "2026-04-24T14:30:00Z",
   "cited_md_url": "https://cited.md/faniq/..."
 }
 ```
@@ -375,7 +375,7 @@ Rules:
     "fan_score": 847,
     "platforms": ["x", "linkedin"],
     "generated_by": "faniq-agent",
-    "generated_at": "2025-04-24T..."
+    "generated_at": "2026-04-24T..."
   },
   "payment": {
     "protocol": "x402",

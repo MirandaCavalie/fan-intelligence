@@ -231,7 +231,7 @@ Make sure the persona has enough comment data to answer in character.
 2. Wire `POST /publish/{creator}` endpoint — publishes all profiles
 3. Auto-trigger after scan completes
 4. Add earnings log to frontend: `[cited.md] Fetch by agent → $0.002 earned`
-5. **This is required by the hackathon rules** — don't skip it
+5. If the live API is slow, generate a local publish artifact and show the publish adapter log
 
 ---
 
@@ -293,5 +293,5 @@ Cut in this order — least impact to demo first:
 - Tinyfish SSE stream visible in UI (the WOW moment)
 - Redis leaderboard (the proof of real-time scoring)
 - Vapi Mode A (intelligence voice — simplest voice demo)
-- cited.md publish (required by hackathon rules)
+- publish log or cited.md publish artifact
 - seed_demo_data.py (insurance policy)
