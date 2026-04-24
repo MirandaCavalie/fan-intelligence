@@ -1296,6 +1296,7 @@ $('scan-btn').addEventListener('click', startScan);
 async function startScan() {
   const raw = $('handle-input').value.trim();
   S.handle = stripAt(raw) || 'lexfridman';
+  $('handle-input').value = S.handle;
 
   // cancel any live SSE
   if (S.sse) { S.sse.close(); S.sse = null; }
@@ -1306,8 +1307,14 @@ async function startScan() {
   $('activity-feed').innerHTML = '<div class="feed-empty" id="feed-placeholder">Starting scan…</div>';
   $('lb-list').innerHTML = '<div class="lb-empty">Scanning…</div>';
   $('fan-count').textContent = '0 fans found';
-  $('pub-btn').classList.remove('vis');
+  const pubBtn = $('pub-btn');
+  pubBtn.classList.remove('vis');
+  pubBtn.textContent = 'Publish →';
+  pubBtn.disabled = false;
   $('pub-banner').classList.remove('vis');
+  $('pub-url').removeAttribute('href');
+  $('pub-url').textContent = '';
+  $('earn-badge').style.display = 'none';
   setScanPill('running', 'Scanning');
 
   const btn = $('scan-btn');

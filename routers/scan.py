@@ -74,6 +74,7 @@ async def run_scan_job(job: ScanJob) -> None:
 @router.post("/scan")
 async def start_scan(body: dict[str, Any], background_tasks: BackgroundTasks) -> dict[str, str]:
     creator = normalize_handle(body.get("creator_handle") or "@lexfridman")
+    await redis_service.clear_creator(creator)
     job = ScanJob(
         job_id=f"scan_{uuid.uuid4().hex[:10]}",
         creator_handle=creator,

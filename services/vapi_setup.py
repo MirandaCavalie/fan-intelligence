@@ -203,6 +203,7 @@ def get_vapi_client_config(creator_handle: str, fan_handle: str | None = None) -
         "creator_handle": creator,
         "fan_handle": fan,
         "public_key": public_key,
+        "vapi_public_key": public_key,
         "intelligence_assistant_id": intelligence_id,
         "persona_assistant_id": persona_id,
         "configured": not missing,
