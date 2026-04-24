@@ -210,12 +210,21 @@
       z-index: 1;
       pointer-events: none;
       background:
-        linear-gradient(90deg, var(--paper) 0%, rgba(240, 238, 234, 0.62) 9%, rgba(240, 238, 234, 0) 24%),
-        linear-gradient(180deg, var(--paper) 0%, rgba(240, 238, 234, 0) 16%, rgba(240, 238, 234, 0) 84%, var(--paper) 100%);
+        linear-gradient(90deg, var(--paper) 0%, rgba(240, 238, 234, 0.72) 4%, rgba(240, 238, 234, 0.18) 13%, rgba(240, 238, 234, 0) 24%),
+        linear-gradient(180deg, var(--paper) 0%, rgba(240, 238, 234, 0) 7%, rgba(240, 238, 234, 0) 91%, var(--paper) 100%);
+    }
+    .landing-right::after {
+      content: "";
+      position: absolute;
+      inset: 22px;
+      z-index: 1;
+      pointer-events: none;
+      border-top: 1px solid rgba(17, 17, 16, 0.08);
+      border-bottom: 1px solid rgba(17, 17, 16, 0.08);
     }
     .landing-art {
       position: absolute;
-      inset: -7vh -13vw -8vh -6vw;
+      inset: -4vh -9vw -5vh -2.5vw;
       margin: 0;
       animation: heroArtIn 650ms ease-out both;
     }
@@ -223,11 +232,11 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: 45% center;
+      object-position: 47% center;
       display: block;
-      filter: grayscale(1) contrast(1.18) saturate(0.92);
+      filter: grayscale(1) contrast(1.28) brightness(0.98) saturate(0.95);
       mix-blend-mode: multiply;
-      opacity: 0.93;
+      opacity: 1;
     }
     .landing-illus { display: none; width: 100%; max-width: 400px; height: auto; overflow: visible; }
 
