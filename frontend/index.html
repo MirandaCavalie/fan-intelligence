@@ -1,121 +1,1678 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FanIQ</title>
-    <link rel="stylesheet" href="/static/styles.css?v=vapi-voice" />
-  </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-mark">FQ</div>
-          <div>
-            <div class="brand-name">FanIQ</div>
-            <div class="brand-subtitle">Fan intelligence demo</div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FanIQ — Fan Intelligence Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web/dist/vapi.js" defer></script>
+  <style>
+    /* ── DESIGN TOKENS ── */
+    :root {
+      --paper:      #F0EEEA;
+      --paper-warm: #E8E5DF;
+      --paper-dark: #DDD9D0;
+      --ink:        #111110;
+      --ink-soft:   #55554F;
+      --ink-faint:  #99998F;
+      --white:      #FAFAF8;
+      --gold:       #F5C518;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      position: fixed;
+      inset: 0;
+      background: var(--paper);
+      display: flex;
+      flex-direction: column;
+      transition: opacity 350ms ease, transform 350ms ease;
+    }
+    .screen.hidden   { opacity: 0; pointer-events: none; transform: translateY(16px); }
+    .screen.exiting  { opacity: 0; transform: translateY(-16px); }
+
+    /* ── SHARED NAV ── */
+    .nav {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 40px;
+      border-bottom: 1.5px solid var(--ink);
+      flex-shrink: 0;
+      background: var(--paper);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark { width: 28px; height: 28px; flex-shrink: 0; }
+    .nav-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+    .nav-dot { color: var(--ink-faint); font-size: 18px; }
+    .nav-spacer { flex: 1; }
+
+    .health-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 20px;
+      color: var(--ink-faint);
+    }
+    .health-badge.demo {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--ink);
+    }
+    .health-badge.live {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--white);
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: livePulse 1.5s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    .back-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      background: none;
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 6px;
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+    .back-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+    /* ═══════════════════════════════════════
+       LANDING SCREEN
+    ═══════════════════════════════════════ */
+    .landing-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    .landing-left {
+      flex: 1;
+      padding: 64px 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 28px;
+    }
+
+    .landing-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-soft);
+    }
+
+    .landing-h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(42px, 5vw, 66px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 400;
+    }
+    .landing-h1 em { font-style: italic; }
+
+    .landing-sub {
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--ink-soft);
+      max-width: 400px;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--ink);
+      color: var(--white);
+      border: 1.5px solid var(--ink);
+      border-radius: 6px;
+      padding: 14px 28px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      width: fit-content;
+      transition: background 0.15s, color 0.15s;
+    }
+    .cta-btn:hover { background: var(--paper); color: var(--ink); }
+
+    .landing-stats {
+      border-top: 1.5px solid var(--paper-dark);
+      padding-top: 22px;
+      display: flex;
+    }
+    .stat-item { flex: 1; padding-right: 20px; }
+    .stat-item + .stat-item { padding-left: 20px; border-left: 1.5px solid var(--paper-dark); }
+    .stat-value {
+      font-family: 'Instrument Serif', serif;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-top: 2px;
+    }
+
+    .landing-right {
+      width: 50%;
+      border-left: 1.5px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .landing-illus { width: 100%; max-width: 400px; height: auto; overflow: visible; }
+
+    /* ── SVG ANIMATIONS ── */
+    @media (prefers-reduced-motion: no-preference) {
+      @keyframes creatorSway {
+        from { transform: rotate(-1.5deg); }
+        to   { transform: rotate(1.5deg); }
+      }
+      @keyframes armWaveL {
+        from { transform: rotate(-18deg); }
+        to   { transform: rotate(8deg); }
+      }
+      @keyframes armWaveR {
+        from { transform: rotate(8deg); }
+        to   { transform: rotate(-18deg); }
+      }
+      @keyframes fanSway {
+        from { transform: rotate(-2deg); }
+        to   { transform: rotate(2deg); }
+      }
+      @keyframes bubbleFloat {
+        from { transform: translateY(0px); }
+        to   { transform: translateY(-5px); }
+      }
+      @keyframes accentSpin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
+      @keyframes nodePulse {
+        0%, 100% { opacity: 0.25; }
+        50%       { opacity: 1; }
+      }
+
+      .creator-body {
+        animation: creatorSway 4s ease-in-out infinite alternate;
+        transform-box: fill-box;
+        transform-origin: center bottom;
+      }
+      .fan1-body {
+        animation: fanSway 3.5s ease-in-out infinite alternate;
+        transform-box: fill-box;
+        transform-origin: center bottom;
+      }
+      .fan2-body {
+        animation: fanSway 3.2s ease-in-out infinite alternate-reverse;
+        transform-box: fill-box;
+        transform-origin: center bottom;
+      }
+      .fan1-arm-up {
+        animation: armWaveL 2.5s ease-in-out infinite alternate;
+        transform-box: fill-box;
+        transform-origin: 0% 80%;
+      }
+      .fan2-arm-up {
+        animation: armWaveR 2.5s ease-in-out infinite alternate;
+        transform-box: fill-box;
+        transform-origin: 100% 80%;
+      }
+      .bubble-score { animation: bubbleFloat 2.2s ease-in-out infinite alternate; }
+      .bubble-x     { animation: bubbleFloat 2.8s ease-in-out infinite alternate; animation-delay: 0.4s; }
+      .bubble-top   { animation: bubbleFloat 2.5s ease-in-out infinite alternate; animation-delay: 0.8s; }
+      .accent-tri1 {
+        animation: accentSpin 22s linear infinite;
+        transform-box: fill-box;
+        transform-origin: center center;
+      }
+      .accent-tri2 {
+        animation: accentSpin 18s linear infinite reverse;
+        transform-box: fill-box;
+        transform-origin: center center;
+      }
+      .gnode { animation: nodePulse 3s ease-in-out infinite; }
+      .gnode:nth-child(2) { animation-delay: 1s; }
+      .gnode:nth-child(3) { animation-delay: 2s; }
+    }
+
+    /* ═══════════════════════════════════════
+       DASHBOARD SCREEN
+    ═══════════════════════════════════════ */
+    .dash-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      grid-template-rows: 1fr 1fr;
+      overflow: hidden;
+    }
+
+    /* ── SCAN PANEL (left, full height) ── */
+    .scan-panel {
+      grid-row: 1 / 3;
+      border-right: 1.5px solid var(--ink);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .scan-inputs {
+      padding: 22px 20px 18px;
+      border-bottom: 1.5px solid var(--paper-dark);
+      flex-shrink: 0;
+    }
+    .section-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-faint);
+      margin-bottom: 14px;
+    }
+    .handle-wrap {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .handle-at {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      pointer-events: none;
+    }
+    .handle-input {
+      width: 100%;
+      padding: 10px 12px 10px 26px;
+      background: var(--white);
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .handle-input:focus { border-color: var(--ink); }
+    .handle-input::placeholder { color: var(--ink-faint); font-weight: 400; }
+
+    .platform-chips { display: flex; gap: 8px; margin-bottom: 10px; }
+    .pchip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--white);
+      color: var(--ink-soft);
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .pchip.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+
+    .scan-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--ink);
+      color: var(--white);
+      border: 1.5px solid var(--ink);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .scan-btn:hover:not(:disabled) { background: var(--paper); color: var(--ink); }
+    .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .feed-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-bottom: 1.5px solid var(--paper-dark);
+      flex-shrink: 0;
+    }
+    .feed-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-faint);
+    }
+    .status-pill {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1.5px solid var(--paper-dark);
+      color: var(--ink-faint);
+    }
+    .status-pill.running { border-color: var(--ink); color: var(--ink); background: var(--gold); }
+    .status-pill.done    { background: var(--ink); border-color: var(--ink); color: var(--white); }
+    .status-pill.error   { background: #dc2626; border-color: #dc2626; color: white; }
+
+    .activity-feed {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+    .feed-empty {
+      padding: 28px 20px;
+      text-align: center;
+      color: var(--ink-faint);
+      font-size: 12px;
+      font-style: italic;
+    }
+    .aline {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 7px 20px;
+      border-bottom: 1px solid var(--paper-warm);
+      animation: slideL 0.28s ease both;
+    }
+    @keyframes slideL {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .spill {
+      flex-shrink: 0;
+      font-size: 8px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1.5px solid currentColor;
+      margin-top: 1px;
+    }
+    .spill-tinyfish { background: var(--ink); color: var(--white); border-color: var(--ink); }
+    .spill-redis    { background: #FF4500; color: white; border-color: #FF4500; }
+    .spill-faniq    { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+    .spill-default  { color: var(--ink-soft); }
+    .amsg { flex: 1; font-size: 11.5px; color: var(--ink-soft); line-height: 1.4; word-break: break-word; }
+    .atime { font-size: 9px; color: var(--ink-faint); flex-shrink: 0; margin-top: 2px; }
+
+    /* ── LEADERBOARD PANEL ── */
+    .lb-panel {
+      grid-column: 2; grid-row: 1;
+      border-bottom: 1.5px solid rgba(17,17,16,.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px 14px;
+      border-bottom: 1.5px solid var(--paper-dark);
+      flex-shrink: 0;
+    }
+    .panel-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+    .panel-meta { font-size: 11px; color: var(--ink-faint); font-weight: 600; }
+
+    .mem-search {
+      display: flex;
+      gap: 8px;
+      padding: 10px 24px;
+      border-bottom: 1.5px solid var(--paper-dark);
+      flex-shrink: 0;
+    }
+    .mem-input {
+      flex: 1;
+      padding: 7px 12px;
+      background: var(--white);
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--ink);
+      outline: none;
+    }
+    .mem-input:focus { border-color: var(--ink); }
+    .mem-input::placeholder { color: var(--ink-faint); }
+    .mem-btn {
+      padding: 7px 14px;
+      background: var(--paper-warm);
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--ink);
+    }
+    .mem-btn:hover { border-color: var(--ink); }
+
+    .lb-list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .lb-empty {
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--ink-faint);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .fan-card {
+      display: grid;
+      grid-template-columns: 30px 44px 1fr auto;
+      gap: 0 12px;
+      padding: 12px 24px;
+      border-bottom: 1.5px solid var(--paper-warm);
+      cursor: pointer;
+      transition: background 0.12s;
+      animation: slideR 0.32s ease both;
+    }
+    @keyframes slideR {
+      from { opacity: 0; transform: translateX(10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .fan-card:hover { background: var(--paper-warm); }
+    .fan-card.sel   { background: var(--ink); color: var(--white); }
+
+    .fank {
+      font-family: 'Instrument Serif', serif;
+      font-size: 18px;
+      color: var(--ink-faint);
+      align-self: center;
+      text-align: right;
+    }
+    .fan-card.sel .fank { color: rgba(250,250,248,.35); }
+
+    .favatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+      align-self: center;
+      flex-shrink: 0;
+    }
+    .fan-card.sel .favatar { border-color: rgba(250,250,248,.5); }
+
+    .finfo { min-width: 0; }
+    .fname {
+      font-size: 13px; font-weight: 800;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .fhandle { font-size: 11px; color: var(--ink-soft); margin-top: 1px; }
+    .fan-card.sel .fhandle { color: rgba(250,250,248,.6); }
+
+    .fscore-wrap {
+      grid-column: 4; grid-row: 1 / 3;
+      display: flex; flex-direction: column;
+      align-items: flex-end; justify-content: center; gap: 5px;
+    }
+    .fscore {
+      font-family: 'Instrument Serif', serif;
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .talk-btn {
+      font-size: 10px; font-weight: 800;
+      padding: 3px 9px;
+      border: 1.5px solid var(--ink);
+      border-radius: 5px;
+      background: transparent;
+      cursor: pointer;
+      color: var(--ink);
+      transition: background 0.1s, color 0.1s;
+      white-space: nowrap;
+    }
+    .talk-btn:hover { background: var(--ink); color: var(--white); }
+    .fan-card.sel .talk-btn { border-color: rgba(250,250,248,.5); color: rgba(250,250,248,.8); }
+    .fan-card.sel .talk-btn:hover { background: var(--white); color: var(--ink); }
+
+    .freason {
+      grid-column: 2 / 5;
+      font-size: 11px; font-style: italic;
+      color: var(--ink-soft);
+      margin-top: 4px; line-height: 1.4;
+    }
+    .fan-card.sel .freason { color: rgba(250,250,248,.6); }
+
+    .ffooter {
+      grid-column: 2 / 5;
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 5px; flex-wrap: wrap;
+    }
+    .ptag {
+      font-size: 9px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 2px 6px;
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 4px;
+      color: var(--ink-soft);
+    }
+    .fan-card.sel .ptag { border-color: rgba(250,250,248,.3); color: rgba(250,250,248,.6); }
+    .apill {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 600;
+      color: var(--ink-soft);
+      padding: 2px 8px;
+      background: var(--paper-warm);
+      border-radius: 10px;
+    }
+    .fan-card.sel .apill { background: rgba(250,250,248,.12); color: rgba(250,250,248,.65); }
+
+    /* pub button in header */
+    .pub-hdr-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px; font-weight: 800;
+      padding: 5px 12px;
+      background: var(--paper-warm);
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--ink);
+      display: none;
+    }
+    .pub-hdr-btn.vis { display: inline-flex; align-items: center; gap: 5px; }
+    .pub-hdr-btn:hover { border-color: var(--ink); }
+
+    /* ── VOICE PANEL ── */
+    .voice-panel {
+      grid-column: 2; grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .voice-inner {
+      flex: 1; min-height: 0;
+      overflow-y: auto;
+      padding: 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .voice-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .vcard {
+      padding: 16px;
+      border: 1.5px solid var(--ink);
+      border-radius: 10px;
+    }
+    .vcard-a { background: var(--ink); color: var(--white); }
+    .vcard-b { background: var(--white); }
+    .vcard-b.no-fan { opacity: 0.55; }
+
+    .vcard-icon { margin-bottom: 8px; }
+    .vcard-title { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+    .vcard-desc  { font-size: 11px; line-height: 1.45; color: var(--ink-faint); }
+    .vcard-a .vcard-desc { color: rgba(250,250,248,.55); }
+
+    .vstart-btn {
+      width: 100%; margin-top: 10px;
+      padding: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px; font-weight: 800;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .vcard-a .vstart-btn {
+      background: rgba(250,250,248,.15);
+      border: 1.5px solid rgba(250,250,248,.35);
+      color: var(--white);
+    }
+    .vcard-a .vstart-btn:hover:not(:disabled) { background: var(--white); color: var(--ink); }
+    .vcard-b .vstart-btn {
+      background: var(--ink);
+      border: 1.5px solid var(--ink);
+      color: var(--white);
+    }
+    .vcard-b .vstart-btn:hover:not(:disabled) { background: var(--paper); color: var(--ink); }
+    .vstart-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* call active */
+    .call-ui {
+      padding: 14px;
+      border: 1.5px solid var(--ink);
+      border-radius: 10px;
+      background: var(--white);
+      display: none;
+    }
+    .call-ui.vis { display: block; }
+
+    .call-hdr {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .call-who { display: flex; align-items: center; gap: 10px; }
+    .call-name { font-size: 13px; font-weight: 800; }
+
+    .waveform { display: flex; align-items: center; gap: 3px; height: 22px; }
+    .wbar {
+      width: 3px; background: var(--ink); border-radius: 2px;
+      animation: wave 0.7s ease-in-out infinite alternate;
+    }
+    .wbar:nth-child(1) { height: 6px;  animation-delay: 0s; }
+    .wbar:nth-child(2) { height: 14px; animation-delay: 0.1s; }
+    .wbar:nth-child(3) { height: 20px; animation-delay: 0.2s; }
+    .wbar:nth-child(4) { height: 16px; animation-delay: 0.15s; }
+    .wbar:nth-child(5) { height: 8px;  animation-delay: 0.05s; }
+    @keyframes wave {
+      from { transform: scaleY(0.35); }
+      to   { transform: scaleY(1); }
+    }
+
+    .end-btn {
+      padding: 5px 12px;
+      background: #dc2626; border: 1.5px solid #dc2626;
+      border-radius: 6px; color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px; font-weight: 800;
+      cursor: pointer;
+    }
+
+    .transcript {
+      max-height: 100px; overflow-y: auto;
+      padding: 8px;
+      background: var(--paper);
+      border-radius: 6px;
+      border: 1.5px solid var(--paper-dark);
+    }
+    .tline { font-size: 11.5px; line-height: 1.5; padding: 1px 0; }
+    .tline.assistant { color: var(--ink); font-weight: 600; }
+    .tline.user      { color: var(--ink-soft); }
+    .tline.system    { color: var(--ink-faint); font-style: italic; }
+
+    /* publish banner */
+    .pub-banner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--paper-warm);
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 10px;
+      font-size: 12px;
+    }
+    .pub-banner.vis { display: flex; }
+    .pub-banner a { color: var(--ink); font-weight: 600; word-break: break-all; }
+    .earn-badge {
+      background: var(--gold); color: var(--ink);
+      font-size: 9px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 2px 6px; border-radius: 4px;
+      display: none;
+    }
+
+    /* mode toggle */
+    .mode-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .mode-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-faint);
+      flex-shrink: 0;
+    }
+    .mode-toggle {
+      display: flex;
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 6px;
+      overflow: hidden;
+      flex: 1;
+    }
+    .mtog {
+      flex: 1;
+      padding: 6px 0;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      background: var(--white);
+      color: var(--ink-soft);
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mtog + .mtog { border-left: 1.5px solid var(--paper-dark); }
+    .mtog.active { background: var(--ink); color: var(--white); }
+    .mtog:not(.active):hover { background: var(--paper-warm); }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--paper-dark); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 1 — LANDING
+══════════════════════════════════════════════════ -->
+<div class="screen" id="s-landing">
+  <nav class="nav">
+    <div class="nav-logo">
+      <svg class="logo-mark" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="12.5" stroke="#111110" stroke-width="1.5"/>
+        <circle cx="14" cy="14" r="7"    stroke="#111110" stroke-width="1.5"/>
+        <circle cx="14" cy="14" r="2.5"  fill="#111110"/>
+      </svg>
+      <span class="nav-name">FanIQ</span>
+    </div>
+    <span class="nav-dot">·</span>
+    <div class="health-badge" id="land-health">—</div>
+    <div class="nav-spacer"></div>
+  </nav>
+
+  <div class="landing-body">
+    <!-- Left: text -->
+    <div class="landing-left">
+      <p class="landing-eyebrow">Fan intelligence platform</p>
+      <h1 class="landing-h1">
+        Know your<br>
+        <em>real fans,</em><br>
+        not just followers.
+      </h1>
+      <p class="landing-sub">
+        Your fans are already talking. FanIQ finds them,
+        scores them live, and lets you talk back.
+      </p>
+      <button class="cta-btn" id="start-btn">Start scanning →</button>
+      <div class="landing-stats">
+        <div class="stat-item">
+          <div class="stat-value">2</div>
+          <div class="stat-label">Platforms</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">&lt;2 min</div>
+          <div class="stat-label">Discovery</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">Live</div>
+          <div class="stat-label">Scoring</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: animated SVG illustration -->
+    <div class="landing-right">
+      <svg class="landing-illus" viewBox="0 0 460 390" fill="none"
+           xmlns="http://www.w3.org/2000/svg"
+           stroke-linecap="round" stroke-linejoin="round">
+
+        <!-- ── DASHES & ACCENT SHAPES ── -->
+        <line x1="18" y1="155" x2="38" y2="155" stroke="#111110" stroke-width="2"/>
+        <line x1="22" y1="163" x2="36" y2="163" stroke="#111110" stroke-width="2"/>
+        <line x1="422" y1="195" x2="445" y2="195" stroke="#111110" stroke-width="2"/>
+        <line x1="428" y1="203" x2="441" y2="203" stroke="#111110" stroke-width="2"/>
+
+        <g class="accent-tri1">
+          <polygon points="42,38 56,66 28,66" stroke="#111110" stroke-width="2" fill="#F0EEEA"/>
+        </g>
+        <g class="accent-tri2">
+          <polygon points="418,300 430,322 406,322" stroke="#111110" stroke-width="2" fill="#F0EEEA"/>
+        </g>
+
+        <!-- graph connection lines -->
+        <line x1="130" y1="190" x2="196" y2="210" stroke="#111110" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.35"/>
+        <line x1="332" y1="190" x2="266" y2="210" stroke="#111110" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.35"/>
+
+        <!-- graph nodes -->
+        <g>
+          <circle class="gnode" cx="116" cy="186" r="4.5" fill="#111110"/>
+          <circle class="gnode" cx="344" cy="186" r="4.5" fill="#111110"/>
+          <circle class="gnode" cx="230" cy="358" r="4.5" fill="#111110"/>
+        </g>
+
+        <!-- ── FAN 1 — LEFT ── -->
+        <g class="fan1-body">
+          <!-- head -->
+          <circle cx="78" cy="90" r="23" fill="#F0EEEA" stroke="#111110" stroke-width="2.5"/>
+          <!-- hair fill -->
+          <path d="M56,86 Q59,62 78,60 Q97,62 101,82" fill="#111110" stroke="none"/>
+          <!-- eyes -->
+          <circle cx="71" cy="88" r="2.5" fill="#111110"/>
+          <circle cx="85" cy="88" r="2.5" fill="#111110"/>
+          <!-- smile -->
+          <path d="M72,97 Q78,104 84,97" stroke="#111110" stroke-width="2" fill="none"/>
+          <!-- torso -->
+          <path d="M62,113 C59,135 57,162 59,188 L97,188 C99,162 97,135 94,113 Z"
+                fill="#F0EEEA" stroke="#111110" stroke-width="2.5"/>
+          <!-- clothing lines -->
+          <path d="M65,130 Q78,127 91,130" stroke="#111110" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.5"/>
+          <path d="M63,147 Q78,144 93,147" stroke="#111110" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.5"/>
+          <!-- left arm (down/side) -->
+          <path d="M62,125 C51,135 44,150 40,165" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <!-- legs -->
+          <path d="M69,188 C66,215 63,240 61,265 C59,273 55,282 52,292" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <path d="M89,188 C92,215 95,240 97,265 C99,273 103,282 106,292" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <!-- shoes -->
+          <path d="M48,290 Q52,300 65,298" stroke="#111110" stroke-width="2.5" fill="#F0EEEA"/>
+          <path d="M102,290 Q106,300 119,298" stroke="#111110" stroke-width="2.5" fill="#F0EEEA"/>
+        </g>
+        <!-- fan1 right arm UP (animated) -->
+        <g class="fan1-arm-up">
+          <path d="M94,122 C108,107 122,92 132,72" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <circle cx="134" cy="68" r="5.5" fill="#F0EEEA" stroke="#111110" stroke-width="2"/>
+        </g>
+
+        <!-- ── FAN 2 — RIGHT ── -->
+        <g class="fan2-body">
+          <!-- head -->
+          <circle cx="382" cy="90" r="23" fill="#F0EEEA" stroke="#111110" stroke-width="2.5"/>
+          <!-- hair -->
+          <path d="M360,86 Q363,62 382,60 Q401,62 405,80" fill="#111110" stroke="none"/>
+          <!-- eyes -->
+          <circle cx="375" cy="88" r="2.5" fill="#111110"/>
+          <circle cx="389" cy="88" r="2.5" fill="#111110"/>
+          <!-- smile -->
+          <path d="M374,97 Q382,104 390,97" stroke="#111110" stroke-width="2" fill="none"/>
+          <!-- torso -->
+          <path d="M366,113 C363,135 361,162 363,188 L401,188 C403,162 401,135 398,113 Z"
+                fill="#F0EEEA" stroke="#111110" stroke-width="2.5"/>
+          <!-- clothing lines -->
+          <path d="M369,130 Q382,127 395,130" stroke="#111110" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.5"/>
+          <path d="M367,147 Q382,144 397,147" stroke="#111110" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.5"/>
+          <!-- right arm (down/side) -->
+          <path d="M400,125 C411,135 418,150 422,165" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <!-- legs -->
+          <path d="M373,188 C370,215 367,240 365,265 C363,273 359,282 356,292" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <path d="M393,188 C396,215 399,240 401,265 C403,273 407,282 410,292" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <!-- shoes -->
+          <path d="M352,290 Q356,300 369,298" stroke="#111110" stroke-width="2.5" fill="#F0EEEA"/>
+          <path d="M406,290 Q410,300 423,298" stroke="#111110" stroke-width="2.5" fill="#F0EEEA"/>
+        </g>
+        <!-- fan2 left arm UP (animated) -->
+        <g class="fan2-arm-up">
+          <path d="M366,122 C352,107 338,92 328,72" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <circle cx="326" cy="68" r="5.5" fill="#F0EEEA" stroke="#111110" stroke-width="2"/>
+        </g>
+
+        <!-- ── CREATOR — CENTER ── -->
+        <g class="creator-body">
+          <!-- head -->
+          <circle cx="230" cy="74" r="33" fill="#F0EEEA" stroke="#111110" stroke-width="2.5"/>
+          <!-- hair -->
+          <path d="M200,70 Q203,42 230,40 Q257,42 261,64" fill="#111110" stroke="none"/>
+          <!-- eyes (confident, slightly narrow) -->
+          <path d="M218,72 Q222,70 226,72" stroke="#111110" stroke-width="2.2" fill="none"/>
+          <path d="M234,72 Q238,70 242,72" stroke="#111110" stroke-width="2.2" fill="none"/>
+          <!-- smile -->
+          <path d="M220,83 Q230,91 240,83" stroke="#111110" stroke-width="2" fill="none"/>
+          <!-- torso -->
+          <path d="M204,107 C198,135 196,170 198,208 L262,208 C264,170 262,135 256,107 Z"
+                fill="#F0EEEA" stroke="#111110" stroke-width="2.5"/>
+          <!-- clothing texture waves -->
+          <path d="M207,124 Q230,119 253,124" stroke="#111110" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.45"/>
+          <path d="M205,143 Q230,138 255,143" stroke="#111110" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.45"/>
+          <path d="M204,162 Q230,157 256,162" stroke="#111110" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.45"/>
+          <path d="M203,181 Q230,176 257,181" stroke="#111110" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.45"/>
+          <!-- left arm spread -->
+          <path d="M204,124 C186,118 168,120 150,129" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <circle cx="147" cy="130" r="6.5" fill="#F0EEEA" stroke="#111110" stroke-width="2"/>
+          <!-- right arm spread -->
+          <path d="M256,124 C274,118 292,120 310,129" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <circle cx="313" cy="130" r="6.5" fill="#F0EEEA" stroke="#111110" stroke-width="2"/>
+          <!-- legs -->
+          <path d="M218,208 C214,236 210,264 207,290" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <path d="M242,208 C246,236 250,264 253,290" stroke="#111110" stroke-width="2.5" fill="none"/>
+          <!-- chunky shoes -->
+          <path d="M201,288 Q206,302 222,300 Q228,302 224,292" fill="#F0EEEA" stroke="#111110" stroke-width="2.5"/>
+          <path d="M249,288 Q254,302 270,300 Q276,302 272,292" fill="#F0EEEA" stroke="#111110" stroke-width="2.5"/>
+        </g>
+
+        <!-- ── SPEECH BUBBLES ── -->
+        <!-- heart + score above fan1 -->
+        <g class="bubble-score">
+          <rect x="18" y="18" width="92" height="40" rx="8" fill="#FAFAF8" stroke="#111110" stroke-width="2"/>
+          <path d="M55,58 L49,72 L67,58" fill="#FAFAF8" stroke="#111110" stroke-width="2"/>
+          <!-- heart -->
+          <path d="M32,34 C32,30 35,28 38,30 C41,28 44,30 44,34 C44,37 38,43 38,43 C38,43 32,37 32,34Z" fill="#111110"/>
+          <!-- score -->
+          <text x="58" y="44" font-family="'Instrument Serif',serif" font-size="15" fill="#111110" text-anchor="middle">847</text>
+        </g>
+
+        <!-- X + posts above fan2 -->
+        <g class="bubble-x">
+          <rect x="350" y="18" width="96" height="40" rx="8" fill="#FAFAF8" stroke="#111110" stroke-width="2"/>
+          <path d="M393,58 L399,72 L381,58" fill="#FAFAF8" stroke="#111110" stroke-width="2"/>
+          <!-- X mark -->
+          <line x1="362" y1="28" x2="374" y2="48" stroke="#111110" stroke-width="2.5"/>
+          <line x1="374" y1="28" x2="362" y2="48" stroke="#111110" stroke-width="2.5"/>
+          <text x="390" y="43" font-family="'DM Sans',sans-serif" font-size="11" font-weight="600" fill="#55554F">14 posts</text>
+        </g>
+
+        <!-- gold badge above creator -->
+        <g class="bubble-top">
+          <rect x="183" y="6" width="94" height="26" rx="13" fill="#F5C518" stroke="#111110" stroke-width="2"/>
+          <text x="230" y="23" font-family="'DM Sans',sans-serif" font-size="10" font-weight="800" fill="#111110" text-anchor="middle">FAN INTEL</text>
+        </g>
+
+      </svg>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 2 — DASHBOARD
+══════════════════════════════════════════════════ -->
+<div class="screen hidden" id="s-dash">
+  <nav class="nav">
+    <div class="nav-logo">
+      <svg class="logo-mark" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="12.5" stroke="#111110" stroke-width="1.5"/>
+        <circle cx="14" cy="14" r="7"    stroke="#111110" stroke-width="1.5"/>
+        <circle cx="14" cy="14" r="2.5"  fill="#111110"/>
+      </svg>
+      <span class="nav-name">FanIQ</span>
+    </div>
+    <span class="nav-dot">·</span>
+    <div class="health-badge" id="dash-health">—</div>
+    <div class="nav-spacer"></div>
+    <button class="back-btn" id="back-btn">← Landing</button>
+  </nav>
+
+  <div class="dash-grid">
+
+    <!-- ── SCAN PANEL ── -->
+    <div class="scan-panel">
+      <div class="scan-inputs">
+        <p class="section-label">01 — Scan creator</p>
+        <div class="handle-wrap">
+          <span class="handle-at">@</span>
+          <input class="handle-input" id="handle-input" type="text"
+                 placeholder="lexfridman" value="lexfridman" autocomplete="off"/>
+        </div>
+        <div class="platform-chips">
+          <div class="pchip active" id="chip-x">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <line x1="1" y1="1" x2="9" y2="9" stroke="currentColor" stroke-width="1.8"/>
+              <line x1="9" y1="1" x2="1" y2="9" stroke="currentColor" stroke-width="1.8"/>
+            </svg>X
+          </div>
+          <div class="pchip" id="chip-li">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <rect x="1" y="1" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M3,4.5L3,7.5M3,3a.4.4,0,1,1,0-.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M5.2,4.5L5.2,7.5M5.2,5.6C5.2,4.6,7.8,4.2,7.8,5.8L7.8,7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>LinkedIn
+          </div>
+        </div>
+        <div class="mode-row">
+          <span class="mode-label">Mode</span>
+          <div class="mode-toggle">
+            <button class="mtog active" id="mtog-demo">Demo data</button>
+            <button class="mtog" id="mtog-live">Live crawl</button>
+          </div>
+        </div>
+        <button class="scan-btn" id="scan-btn">Scan now</button>
+      </div>
+
+      <div class="feed-header">
+        <span class="feed-label">Agent activity</span>
+        <span class="status-pill" id="scan-pill">Idle</span>
+      </div>
+      <div class="activity-feed" id="activity-feed">
+        <div class="feed-empty" id="feed-placeholder">Enter a handle and click Scan now</div>
+      </div>
+    </div>
+
+    <!-- ── LEADERBOARD PANEL ── -->
+    <div class="lb-panel">
+      <div class="panel-hdr">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <h2 class="panel-title">Top fans</h2>
+          </div>
+          <p class="section-label" style="margin-bottom:0;margin-top:2px;">02 — Redis leaderboard</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="panel-meta" id="fan-count">0 fans found</span>
+          <button class="pub-hdr-btn" id="pub-btn">Publish →</button>
+        </div>
+      </div>
+      <div class="mem-search">
+        <input class="mem-input" id="mem-input" type="text" placeholder="Search fan memory (e.g. AI research)"/>
+        <button class="mem-btn" id="mem-btn">Search</button>
+      </div>
+      <div class="lb-list" id="lb-list">
+        <div class="lb-empty">Fans will appear here as they're discovered</div>
+      </div>
+    </div>
+
+    <!-- ── VOICE PANEL ── -->
+    <div class="voice-panel">
+      <div class="voice-inner">
+        <p class="section-label">03 — Voice intelligence</p>
+
+        <div class="voice-cards">
+          <!-- Mode A -->
+          <div class="vcard vcard-a">
+            <div class="vcard-icon">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none"
+                   stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="8" y="2" width="6" height="11" rx="3"/>
+                <path d="M4,11Q4,18 11,18Q18,18 18,11"/>
+                <line x1="11" y1="18" x2="11" y2="21"/>
+                <line x1="7"  y1="21" x2="15" y2="21"/>
+              </svg>
+            </div>
+            <div class="vcard-title">Ask FanIQ</div>
+            <div class="vcard-desc">Talk to the intelligence layer — ask who your best fans are and what to do next.</div>
+            <button class="vstart-btn" id="btn-intel">Start call</button>
+          </div>
+
+          <!-- Mode B -->
+          <div class="vcard vcard-b no-fan" id="vcard-persona">
+            <div class="vcard-icon">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none"
+                   stroke="#111110" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="7" r="4"/>
+                <path d="M3,20Q3,14 11,14Q19,14 19,20"/>
+              </svg>
+            </div>
+            <div class="vcard-title" id="persona-title">Talk to fan</div>
+            <div class="vcard-desc" id="persona-desc">Select a fan from the leaderboard to hear their voice persona.</div>
+            <button class="vstart-btn" id="btn-persona" disabled>Choose fan first</button>
           </div>
         </div>
 
-        <form id="scan-form" class="scan-form">
-          <label class="field">
-            Creator
-            <input id="creator-input" name="creator" value="@lexfridman" autocomplete="off" />
-          </label>
-          <label class="check-field">
-            <input id="platform-x" type="checkbox" checked />
-            X
-          </label>
-          <label class="check-field">
-            <input id="platform-linkedin" type="checkbox" />
-            LinkedIn
-          </label>
-          <label class="check-field">
-            <input id="demo-mode" type="checkbox" checked />
-            Demo data
-          </label>
-          <button type="submit">Scan</button>
-          <button type="button" id="seed-button">Load seed</button>
-        </form>
-
-        <div id="health-pill" class="health-pill">Checking</div>
-      </header>
-
-      <main class="workspace">
-        <section class="panel stream-panel">
-          <div class="panel-head">
-            <h2>Agent stream</h2>
-            <div id="scan-status" class="status-text">Idle</div>
-          </div>
-          <div id="event-stream" class="event-stream"></div>
-        </section>
-
-        <section class="panel leaderboard-panel">
-          <div class="panel-head">
-            <h2>Redis leaderboard</h2>
-            <div id="fan-count" class="status-text">0 fans</div>
-          </div>
-          <div id="leaderboard" class="leaderboard"></div>
-        </section>
-
-        <section class="panel detail-panel">
-          <div class="panel-head">
-            <h2>Fan detail</h2>
-            <div id="selected-score" class="status-text">No selection</div>
-          </div>
-          <div id="fan-detail" class="fan-detail"></div>
-          <div class="answer-box">
-            <div class="answer-actions">
-              <button id="ask-button" type="button">Ask FanIQ</button>
-              <button id="publish-button" type="button">Publish</button>
-            </div>
-            <div id="vapi-answer" class="vapi-answer">Ask FanIQ who matters most and what to do next.</div>
-            <div class="voice-box">
-              <div class="voice-head">
-                <div>
-                  <div class="voice-title">Vapi voice</div>
-                  <div id="vapi-voice-status" class="status-text">Checking voice setup</div>
-                </div>
-                <div id="vapi-call-pill" class="call-pill">idle</div>
+        <!-- Active call UI -->
+        <div class="call-ui" id="call-ui">
+          <div class="call-hdr">
+            <div class="call-who">
+              <div class="waveform">
+                <div class="wbar"></div><div class="wbar"></div>
+                <div class="wbar"></div><div class="wbar"></div>
+                <div class="wbar"></div>
               </div>
-              <div class="voice-actions">
-                <button id="voice-intel-button" type="button">Start FanIQ Voice</button>
-                <button id="voice-persona-button" type="button">Talk to selected fan</button>
-                <button id="voice-end-button" type="button">End call</button>
-              </div>
-              <div id="vapi-transcript" class="voice-transcript">Voice transcript appears here when Vapi is configured.</div>
+              <span class="call-name" id="call-name">FanIQ</span>
             </div>
+            <button class="end-btn" id="end-btn">End call</button>
           </div>
-        </section>
-      </main>
-
-      <footer class="trace-row">
-        <section class="panel publish-panel">
-          <div class="panel-head">
-            <h2>Publish log</h2>
-            <div id="publish-status" class="status-text">Local adapter ready</div>
+          <div class="transcript" id="transcript">
+            <div class="tline system">Transcript will appear here…</div>
           </div>
-          <div id="publish-log" class="trace-list"></div>
-        </section>
+        </div>
 
-        <section class="panel sponsor-panel">
-          <div class="panel-head">
-            <h2>Redis AI memory</h2>
-            <div id="memory-status" class="status-text">Agent Memory - context search</div>
-          </div>
-          <div id="memory-results" class="trace-list"></div>
-        </section>
+        <!-- Publish banner -->
+        <div class="pub-banner" id="pub-banner">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+               stroke="#111110" stroke-width="2" stroke-linecap="round">
+            <path d="M2,8L6,12L14,4"/>
+          </svg>
+          <span>Published to cited.md</span>
+          <a href="#" id="pub-url" target="_blank" rel="noopener">—</a>
+          <span class="earn-badge" id="earn-badge">Earning</span>
+        </div>
 
-        <section class="panel sponsor-panel">
-          <div class="panel-head">
-            <h2>Sponsor trace</h2>
-            <div class="status-text">TinyFish - Redis - Vapi - Shipables</div>
-          </div>
-          <div id="sponsor-trace" class="trace-list"></div>
-        </section>
-      </footer>
-    </div>
+      </div><!-- /voice-inner -->
+    </div><!-- /voice-panel -->
 
-    <script src="/static/app.js?v=vapi-voice"></script>
-  </body>
+  </div><!-- /dash-grid -->
+</div><!-- /s-dash -->
+
+
+<script>
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+const S = {
+  handle: 'lexfridman',   // without @
+  jobId: null,
+  sse: null,
+  fans: [],               // array of fan objects, sorted by score desc
+  selectedFan: null,
+  vapiInst: null,
+  scanDone: false,
+};
+
+/* ═══════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+
+function stripAt(h) { return (h || '').trim().replace(/^@+/, ''); }
+function withAt(h)  { const s = stripAt(h); return s ? '@' + s : ''; }
+
+function initials(name) {
+  const p = (name || '').trim().split(/\s+/);
+  return p.length >= 2
+    ? (p[0][0] + p[1][0]).toUpperCase()
+    : (name || '??').slice(0, 2).toUpperCase();
+}
+
+function fmtTime(ts) {
+  if (!ts) return '';
+  try { return new Date(ts).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
+  catch { return ''; }
+}
+
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN TRANSITIONS
+═══════════════════════════════════════════════ */
+function toScreen(show, hide) {
+  const showEl = $(show), hideEl = $(hide);
+  hideEl.classList.add('exiting');
+  setTimeout(() => {
+    hideEl.classList.add('hidden');
+    hideEl.classList.remove('exiting');
+    showEl.classList.remove('hidden');
+  }, 350);
+}
+
+$('start-btn').addEventListener('click', () => {
+  toScreen('s-dash', 's-landing');
+  checkHealth();
+});
+$('back-btn').addEventListener('click', () => toScreen('s-landing', 's-dash'));
+
+/* ═══════════════════════════════════════════════
+   HEALTH
+═══════════════════════════════════════════════ */
+async function checkHealth() {
+  try {
+    const d = await fetch('/health').then(r => r.json());
+    ['land-health', 'dash-health'].forEach(id => setHealthBadge(id, d));
+  } catch (e) { /* Redis might not be running in all environments */ }
+}
+
+function setHealthBadge(id, d) {
+  const el = $(id);
+  if (!el) return;
+  el.className = 'health-badge';
+  if (d.mode === 'demo') {
+    el.classList.add('demo');
+    el.textContent = 'DEMO MODE';
+  } else if (d.mode === 'live') {
+    el.classList.add('live');
+    el.innerHTML = '<div class="live-dot"></div> Live';
+  } else {
+    el.textContent = d.status || 'OK';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   PLATFORM CHIPS
+═══════════════════════════════════════════════ */
+['chip-x','chip-li'].forEach(id => {
+  $(id).addEventListener('click', () => $(id).classList.toggle('active'));
+});
+
+// Mode toggle: Demo ↔ Live
+$('mtog-demo').addEventListener('click', () => {
+  $('mtog-demo').classList.add('active');
+  $('mtog-live').classList.remove('active');
+});
+$('mtog-live').addEventListener('click', () => {
+  $('mtog-live').classList.add('active');
+  $('mtog-demo').classList.remove('active');
+});
+
+function isDemoMode() {
+  return $('mtog-demo').classList.contains('active');
+}
+
+function getPlatforms() {
+  const p = [];
+  if ($('chip-x').classList.contains('active'))  p.push('x');
+  if ($('chip-li').classList.contains('active')) p.push('linkedin');
+  return p.length ? p : ['x'];
+}
+
+/* ═══════════════════════════════════════════════
+   SCAN
+═══════════════════════════════════════════════ */
+$('scan-btn').addEventListener('click', startScan);
+
+async function startScan() {
+  const raw = $('handle-input').value.trim();
+  S.handle = stripAt(raw) || 'lexfridman';
+
+  // cancel any live SSE
+  if (S.sse) { S.sse.close(); S.sse = null; }
+
+  // reset UI
+  S.fans = [];
+  S.scanDone = false;
+  $('activity-feed').innerHTML = '<div class="feed-empty" id="feed-placeholder">Starting scan…</div>';
+  $('lb-list').innerHTML = '<div class="lb-empty">Scanning…</div>';
+  $('fan-count').textContent = '0 fans found';
+  $('pub-btn').classList.remove('vis');
+  $('pub-banner').classList.remove('vis');
+  setScanPill('running', 'Scanning');
+
+  const btn = $('scan-btn');
+  btn.disabled = true;
+  btn.textContent = 'Scanning…';
+
+  try {
+    const res = await fetch('/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        creator_handle: withAt(S.handle),
+        platforms: getPlatforms(),
+        demo_mode: isDemoMode(),
+      }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    S.jobId = data.job_id;
+    openSSE(S.jobId);
+  } catch (err) {
+    appendLine({ sponsor: 'faniq', message: 'Scan failed: ' + err.message });
+    setScanPill('error', 'Error');
+    btn.disabled = false;
+    btn.textContent = 'Scan now';
+  }
+}
+
+function openSSE(jobId) {
+  const es = new EventSource('/scan/' + encodeURIComponent(jobId));
+  S.sse = es;
+
+  es.onmessage = e => {
+    try { onSseEvent(JSON.parse(e.data)); }
+    catch(err) { console.error('SSE parse', err, e.data); }
+  };
+
+  es.onerror = () => {
+    es.close(); S.sse = null;
+    if (!S.scanDone) {
+      setScanPill('', 'Disconnected');
+      resetScanBtn();
+    }
+  };
+}
+
+function onSseEvent(ev) {
+  switch (ev.type) {
+    case 'fan_found':
+      appendLine(ev);
+      if (ev.fan) upsertFan(ev.fan);
+      break;
+    case 'done':
+      appendLine(ev);
+      onScanDone();
+      break;
+    default:
+      appendLine(ev);
+  }
+}
+
+function appendLine(ev) {
+  const feed = $('activity-feed');
+  const ph = $('feed-placeholder');
+  if (ph) ph.remove();
+
+  const sponsor = (ev.sponsor || 'faniq').toLowerCase();
+  const pillClass = ['tinyfish','redis','faniq'].includes(sponsor)
+    ? 'spill-' + sponsor : 'spill-default';
+
+  const div = document.createElement('div');
+  div.className = 'aline';
+  div.innerHTML =
+    `<span class="spill ${pillClass}">${esc(ev.sponsor || 'faniq')}</span>` +
+    `<span class="amsg">${esc(ev.message || '')}</span>` +
+    `<span class="atime">${fmtTime(ev.timestamp)}</span>`;
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function setScanPill(cls, text) {
+  const p = $('scan-pill');
+  p.className = 'status-pill' + (cls ? ' ' + cls : '');
+  p.textContent = text;
+}
+
+function resetScanBtn() {
+  const b = $('scan-btn');
+  b.disabled = false;
+  b.textContent = 'Scan now';
+}
+
+function onScanDone() {
+  S.scanDone = true;
+  if (S.sse) { S.sse.close(); S.sse = null; }
+  setScanPill('done', 'Done');
+  resetScanBtn();
+  $('pub-btn').classList.add('vis');
+  refreshFromApi();
+}
+
+/* ═══════════════════════════════════════════════
+   LEADERBOARD
+═══════════════════════════════════════════════ */
+function upsertFan(fan) {
+  const i = S.fans.findIndex(f => f.handle === fan.handle);
+  if (i >= 0) Object.assign(S.fans[i], fan);
+  else S.fans.push(fan);
+  S.fans.sort((a, b) => (b.score || 0) - (a.score || 0));
+  renderLb();
+}
+
+async function refreshFromApi() {
+  if (!S.handle) return;
+  try {
+    const d = await fetch('/fans/' + encodeURIComponent(S.handle)).then(r => r.json());
+    if (d.top_fans?.length) {
+      d.top_fans.forEach(fan => upsertFan(fan));
+    }
+  } catch(e) { console.error('Leaderboard refresh', e); }
+}
+
+function renderLb() {
+  $('fan-count').textContent = S.fans.length + ' fan' + (S.fans.length !== 1 ? 's' : '') + ' found';
+  const list = $('lb-list');
+  if (!S.fans.length) {
+    list.innerHTML = '<div class="lb-empty">Fans will appear here as they\'re discovered</div>';
+    return;
+  }
+  list.innerHTML = '';
+  S.fans.forEach((fan, i) => list.appendChild(buildCard(fan, i + 1)));
+}
+
+function buildCard(fan, rank) {
+  const isSel = S.selectedFan?.handle === fan.handle;
+  const card = document.createElement('div');
+  card.className = 'fan-card' + (isSel ? ' sel' : '');
+
+  const pts = (fan.platforms || [])
+    .map(p => `<span class="ptag">${esc(p.toUpperCase())}</span>`).join('');
+  const actionHtml = fan.suggested_action
+    ? `<span class="apill"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="5" cy="4" r="2.5"/><line x1="5" y1="6.5" x2="5" y2="9.5"/></svg>${esc(fan.suggested_action)}</span>`
+    : '';
+
+  card.innerHTML =
+    `<div class="fank">${rank}</div>` +
+    `<div class="favatar">${esc(initials(fan.display_name || fan.handle))}</div>` +
+    `<div class="finfo">` +
+      `<div class="fname">${esc(fan.display_name || fan.handle)}</div>` +
+      `<div class="fhandle">@${esc(stripAt(fan.handle))}</div>` +
+    `</div>` +
+    `<div class="fscore-wrap">` +
+      `<div class="fscore">${fan.score || 0}</div>` +
+      `<button class="talk-btn">Talk →</button>` +
+    `</div>` +
+    `<div class="freason">${esc(fan.reason || '')}</div>` +
+    `<div class="ffooter">${pts}${actionHtml}</div>`;
+
+  // Select card
+  card.addEventListener('click', e => {
+    if (e.target.closest('.talk-btn')) return;
+    selectFan(fan);
+  });
+
+  // Talk button
+  card.querySelector('.talk-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    selectFan(fan);
+    startPersonaCall(fan);
+  });
+
+  return card;
+}
+
+function selectFan(fan) {
+  S.selectedFan = fan;
+  renderLb();
+
+  const card = $('vcard-persona');
+  card.classList.remove('no-fan');
+  $('persona-title').textContent = 'Talk to ' + (fan.display_name || fan.handle);
+  $('persona-desc').textContent =
+    'Ask ' + (fan.display_name || fan.handle) + ' about their engagement with your content.';
+  const pb = $('btn-persona');
+  pb.disabled = false;
+  pb.textContent = 'Start call';
+}
+
+/* ═══════════════════════════════════════════════
+   VAPI VOICE
+═══════════════════════════════════════════════ */
+async function fetchVapiCfg(creatorHandle, fanHandle) {
+  const p = new URLSearchParams({ creator_handle: withAt(creatorHandle) });
+  if (fanHandle) p.set('fan_handle', withAt(fanHandle));
+  const res = await fetch('/vapi/client-config?' + p);
+  if (!res.ok) throw new Error('Vapi config fetch failed (' + res.status + ')');
+  return res.json();
+}
+
+async function startIntelCall() {
+  if (typeof Vapi === 'undefined') {
+    addTranscript('system', 'Vapi SDK not loaded — check CDN connectivity.');
+    return;
+  }
+  const btn = $('btn-intel');
+  btn.textContent = 'Connecting…'; btn.disabled = true;
+  try {
+    const cfg = await fetchVapiCfg(S.handle);
+    destroyVapi();
+    S.vapiInst = new Vapi(cfg.vapi_public_key);
+    wireVapiEvents('FanIQ');
+    await S.vapiInst.start(cfg.intelligence_assistant_id);
+  } catch(err) {
+    console.error('Intel call', err);
+    addTranscript('system', 'Could not start call: ' + err.message);
+    btn.textContent = 'Start call'; btn.disabled = false;
+  }
+}
+
+async function startPersonaCall(fan) {
+  if (typeof Vapi === 'undefined') {
+    addTranscript('system', 'Vapi SDK not loaded.');
+    return;
+  }
+  const btn = $('btn-persona');
+  btn.textContent = 'Connecting…'; btn.disabled = true;
+  try {
+    const cfg = await fetchVapiCfg(S.handle, stripAt(fan.handle));
+    destroyVapi();
+    S.vapiInst = new Vapi(cfg.vapi_public_key);
+    wireVapiEvents(fan.display_name || fan.handle);
+    await S.vapiInst.start(cfg.persona_assistant_id);
+  } catch(err) {
+    console.error('Persona call', err);
+    addTranscript('system', 'Could not start persona call: ' + err.message);
+    btn.textContent = 'Start call'; btn.disabled = false;
+  }
+}
+
+function wireVapiEvents(name) {
+  const v = S.vapiInst;
+  v.on('call-start', () => {
+    $('call-name').textContent = name;
+    $('call-ui').classList.add('vis');
+    $('transcript').innerHTML = '';
+  });
+  v.on('call-end', () => {
+    $('call-ui').classList.remove('vis');
+    resetVapiBtns();
+  });
+  v.on('message', msg => {
+    if (msg.type === 'transcript' && msg.transcriptType === 'final') {
+      addTranscript(msg.role, msg.transcript);
+    }
+  });
+  v.on('error', err => {
+    console.error('Vapi error', err);
+    addTranscript('system', String(err?.message || JSON.stringify(err)));
+  });
+}
+
+function resetVapiBtns() {
+  $('btn-intel').textContent = 'Start call'; $('btn-intel').disabled = false;
+  if (!$('vcard-persona').classList.contains('no-fan')) {
+    $('btn-persona').textContent = 'Start call'; $('btn-persona').disabled = false;
+  }
+}
+
+function destroyVapi() {
+  if (S.vapiInst) {
+    try { S.vapiInst.stop(); } catch(e) {}
+    S.vapiInst = null;
+  }
+}
+
+function addTranscript(role, text) {
+  const area = $('transcript');
+  // remove placeholder
+  const ph = area.querySelector('.system');
+  if (ph && ph.textContent.includes('Transcript will appear')) ph.remove();
+
+  const line = document.createElement('div');
+  line.className = 'tline ' + role;
+  const label = role === 'assistant' ? 'FanIQ' : role === 'user' ? 'You' : '●';
+  line.textContent = label + ': ' + text;
+  area.appendChild(line);
+  area.scrollTop = area.scrollHeight;
+}
+
+$('btn-intel').addEventListener('click', startIntelCall);
+$('btn-persona').addEventListener('click', () => { if (S.selectedFan) startPersonaCall(S.selectedFan); });
+$('end-btn').addEventListener('click', () => { destroyVapi(); $('call-ui').classList.remove('vis'); resetVapiBtns(); });
+
+/* ═══════════════════════════════════════════════
+   PUBLISH
+═══════════════════════════════════════════════ */
+$('pub-btn').addEventListener('click', publishCreator);
+
+async function publishCreator() {
+  if (!S.handle) return;
+  const btn = $('pub-btn');
+  btn.textContent = 'Publishing…'; btn.disabled = true;
+  try {
+    const d = await fetch('/publish/' + encodeURIComponent(S.handle), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'demo' }),
+    }).then(r => r.json());
+
+    const urlEl = $('pub-url');
+    const displayUrl = d.url || d.fallback_file || '(local file)';
+    urlEl.href = d.url || '#';
+    urlEl.textContent = displayUrl;
+    if (d.payment_enabled) $('earn-badge').style.display = 'inline-block';
+    $('pub-banner').classList.add('vis');
+    btn.textContent = 'Published ✓';
+
+    appendLine({ sponsor: 'faniq', message: 'Published → ' + displayUrl, timestamp: new Date().toISOString() });
+  } catch(err) {
+    console.error('Publish', err);
+    btn.textContent = 'Failed — retry';
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = 'Publish →'; }, 2500);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   MEMORY SEARCH
+═══════════════════════════════════════════════ */
+$('mem-btn').addEventListener('click', memSearch);
+$('mem-input').addEventListener('keydown', e => { if (e.key === 'Enter') memSearch(); });
+
+async function memSearch() {
+  const q = $('mem-input').value.trim();
+  if (!q || !S.handle) return;
+  try {
+    const d = await fetch(
+      '/memory/' + encodeURIComponent(S.handle) + '/search?q=' + encodeURIComponent(q)
+    ).then(r => r.json());
+
+    const hits = d.results || [];
+    appendLine({
+      sponsor: 'redis',
+      message: 'Memory "' + q + '": ' + (hits.length ? hits.length + ' match(es)' : 'no results'),
+      timestamp: new Date().toISOString(),
+    });
+
+    // Briefly highlight matched cards
+    hits.forEach(r => {
+      const cards = document.querySelectorAll('.fan-card');
+      cards.forEach(card => {
+        const hEl = card.querySelector('.fhandle');
+        if (hEl && stripAt(hEl.textContent) === stripAt(r.fan_handle)) {
+          card.style.outline = '2px solid var(--gold)';
+          setTimeout(() => { card.style.outline = ''; }, 3000);
+        }
+      });
+    });
+  } catch(e) { console.error('Memory search', e); }
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+window.addEventListener('load', checkHealth);
+</script>
+</body>
 </html>
