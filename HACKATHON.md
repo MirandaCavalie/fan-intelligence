@@ -2,6 +2,8 @@
 
 > $45k+ in prizes. 5.5 hours. One shot. This document is the competitive strategy.
 
+Current MVP note: Tinyfish, Redis, Vapi Mode A, and Shipables are the core sponsor stack. Ghost/TigerData, live cited.md/Senso, x402, LinkedIn, and Vapi persona mode add sponsor depth only if they are stable before rehearsal.
+
 ---
 
 ## Schedule
@@ -26,8 +28,8 @@
 **Our answer:**
 - Tinyfish crawl fires automatically from a single API call — no human clicks
 - Redis scores update without polling — push-driven
-- cited.md publish triggers automatically after each Ghost write
-- x402 payment collection is fully autonomous — earns while nobody is watching
+- publish triggers automatically after the fan report is generated
+- x402 payment collection is shown only if the live rail is configured and verified
 - The whole pipeline from handle input to published + scored profiles requires zero human steps
 
 **What to say:** "After the creator types their handle and hits Scan, FanIQ runs
@@ -123,8 +125,8 @@ Redis sorted sets. No SQL, no polling — pure Redis sorted set semantics."
 ### Vapi track
 **Our usage:** Two distinct voice assistants using Vapi's custom LLM pattern. The FanIQ
 Intelligence assistant pulls live data from Redis and Ghost at call time, injecting it as
-system context. The Fan Persona assistant injects a full persona prompt built from the fan's
-actual engagement history. Both use Vapi's STT → custom LLM → TTS pipeline with sub-2s latency.
+system context. The Fan Persona assistant is a stretch path that injects a full persona prompt
+built from the fan's actual engagement history. Keep voice answers short for demo latency.
 
 **Pitch to Vapi judges:** "We built two completely different voice experiences with one
 infrastructure. The persona mode is something nobody has seen before — talking to your fan,

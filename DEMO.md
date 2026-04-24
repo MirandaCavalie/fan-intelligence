@@ -3,6 +3,8 @@
 > This document is the north star of the project. Every technical decision serves this demo.
 > If a feature doesn't appear here, it doesn't get built today.
 
+Current implementation note: the reliable demo path is Tinyfish-visible scan events, Redis leaderboard, Vapi Mode A, and a publish log/local artifact. Vapi Mode B, LinkedIn, live cited.md, and x402 are stretch moments only if they are verified before rehearsal.
+
 ---
 
 ## The single sentence
@@ -84,8 +86,8 @@ this person's real comments and bio."
 that — I thought the part about scaling laws was fascinating. Lex pushed back in a way
 nobody else does. I shared it to like three different Slack channels."
 
-**Say:** "That's their actual engagement history, turned into a voice conversation.
-No hallucination — everything it says comes from what this person has actually written."
+**Say:** "That's a synthetic fan persona grounded in collected engagement history.
+The important part is that the answers stay tied to source snippets we captured."
 
 ---
 
@@ -97,10 +99,10 @@ No hallucination — everything it says comes from what this person has actually
 Senso's context layer. That means other agents can discover and consume this fan
 intelligence. And when they do..."
 
-**Show:** The activity log: `[cited.md] Fetch by agent x → $0.002 earned`
+**Show:** The activity log: `[publish] Fan intelligence artifact generated`
 
-**Say:** "FanIQ earns money autonomously. The agent scans, profiles, publishes, and
-monetizes — without any human in the loop. That's what we mean by agentic."
+**Say:** "FanIQ turns fan intelligence into an artifact other agents can consume. If the
+x402 rail is enabled, that artifact can become a paid endpoint."
 
 **Show:** Final leaderboard — 47 fans, top 10 visible, scores, platform badges.
 
@@ -170,8 +172,8 @@ Pre-seeded handles: `@airesearcher_sf`, `@ml_nerd_42`, `@sarah_chen_ai`, `@devre
 
 - [ ] `seed_demo_data.py` has been run and leaderboard is pre-populated
 - [ ] Vapi Mode A assistant is live and responding (test with "who are my top fans")
-- [ ] Vapi Mode B persona is working for at least 2 fan handles
-- [ ] cited.md publish is wired — profiles show "Published" badge
+- [ ] Vapi Mode A is working from Redis-backed fan data
+- [ ] Publish log or cited.md publish is wired — profiles show "Published" badge
 - [ ] ngrok is running and Vapi webhook URL is updated
 - [ ] Microphone is working, no echo, quiet environment
 - [ ] Demo is timed: must finish by 2:55 to leave buffer

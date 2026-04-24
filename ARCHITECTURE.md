@@ -2,6 +2,10 @@
 
 ---
 
+## MVP implementation note
+
+The current scaffold implements the reliable hackathon path first: FastAPI, Redis profile/leaderboard state, seeded demo data, Tinyfish-visible scan events with optional live probe, Vapi Mode A via `/vapi/llm`, local publish artifacts, and Shipables skill files. Ghost/TigerData, live cited.md/Senso, x402, LinkedIn crawl, Redis vector search, and Vapi persona mode are sponsor-depth/stretch integrations unless verified before the demo.
+
 ## System diagram
 
 ```

@@ -2,6 +2,12 @@
 
 > Know your fans. Not just your follower count.
 
+## Hackathon MVP
+
+FanIQ is optimized for a reliable 3-minute Ship to Prod hackathon demo. The implemented MVP uses seeded fan data, Redis sorted sets, a FastAPI backend, a one-screen frontend, a Vapi-compatible answer endpoint, a TinyFish-visible scan path, a local publish adapter, and a Shipables skill package.
+
+Ghost/TigerData persistence, live cited.md/Senso publish, LinkedIn crawling, synthetic fan persona voice mode, x402 payments, and Redis vector search are sponsor-depth or stretch integrations. They should not block the core demo.
+
 ## Vision
 
 Content creators have millions of followers but zero intelligence about who their actual superfans are. FanIQ is an autonomous agent that discovers, profiles, and ranks the people who engage with a creator across X and LinkedIn — then lets the creator talk to them, literally, through a voice interface powered by their real engagement data. Every fan profile FanIQ generates is published to the open web via cited.md and earns micro-payments when consumed by other agents.
@@ -55,67 +61,46 @@ The root docs are the public project narrative. The implementation control room 
 
 ```
 faniq/
-├── main.py                 # FastAPI app entry point
-├── routers/
-│   ├── scan.py             # POST /scan, GET /scan/{id} SSE
-│   ├── fans.py             # GET /fans/{creator}, GET /fan/{creator}/{fan}
-│   └── vapi.py             # POST /vapi/llm, POST /vapi/webhook
-├── services/
-│   ├── tinyfish.py         # Tinyfish async client
-│   ├── ghost.py            # Ghost Admin API client
-│   ├── redis_service.py    # Scoring, leaderboard, cache
-│   ├── scorer.py           # Fan scoring algorithm
-│   ├── persona.py          # Fan persona prompt builder
-│   └── cited.py            # cited.md publish + x402
-├── models/
-│   ├── fan.py              # FanProfile, EngagementEvent
-│   └── job.py              # ScanJob
-├── scripts/
-│   ├── test_tinyfish.py    # Integration test
-│   ├── test_redis.py       # Integration test
-│   ├── test_ghost.py       # Integration test
-│   └── seed_demo_data.py   # Pre-seed 15 fan profiles for demo backup
-├── frontend/
-│   └── index.html          # Minimal UI: handle input, SSE stream, leaderboard, voice
+├── main.py                     # FastAPI app + static frontend
+├── routers/                    # health, scan, fans, vapi, publish endpoints
+├── services/                   # Redis, scoring, seed data, TinyFish, Vapi, publish adapters
+├── models/                     # FanProfile, ScanJob, ScanEvent, PublishResult
+├── scripts/                    # seed + smoke tests
+├── frontend/                   # one-screen demo UI
+├── skill/                      # Shipables skill package
+├── output/published/           # local publish artifacts
 ├── requirements.txt
-├── .env.example
-├── README.md
-├── DEMO.md
-├── HACKATHON.md
-├── ARCHITECTURE.md
-├── BUILD_PLAN.md
-└── SETUP.md
+└── .env.example
 ```
 
 ## Quick start
 
 ```bash
-git clone https://github.com/YOUR_TEAM/faniq
-cd faniq
 cp .env.example .env
-# Fill in all API keys — see SETUP.md
-
 pip install -r requirements.txt
 
 # Start Redis
 docker run -d -p 6379:6379 redis:alpine
 
+# Seed demo data
+python scripts/seed_demo_data.py --creator @lexfridman --clear
+
 # Start server
 uvicorn main:app --reload --port 8000
 
-# In another terminal — expose for Vapi webhooks
-ngrok http 8000
-# Copy ngrok URL → NGROK_URL in .env + update Vapi assistant's serverUrl
+# Open http://localhost:8000
 ```
 
 ## The cited.md layer
 
-Every fan profile FanIQ generates is published to `cited.md` via Senso's context layer. This means:
+The MVP publishes a local agent-consumable markdown artifact from `POST /publish/{creator}`. If Senso credentials are configured, the publisher attempts a live cited.md/Senso publish and falls back to the local artifact if unavailable.
+
+The intended cited.md layer means:
 - Other agents can discover and consume FanIQ's fan intelligence
 - Each fetch triggers a micro-payment via x402 payment rails
 - FanIQ earns money autonomously, 24/7, without human intervention
 
-This is what makes FanIQ an **agentic** product, not just a tool.
+Only claim live payments in the demo if the real x402 rail is configured and verified.
 
 ## Team
 

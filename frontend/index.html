@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FanIQ</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">FQ</div>
+          <div>
+            <div class="brand-name">FanIQ</div>
+            <div class="brand-subtitle">Fan intelligence demo</div>
+          </div>
+        </div>
+
+        <form id="scan-form" class="scan-form">
+          <label class="field">
+            Creator
+            <input id="creator-input" name="creator" value="@lexfridman" autocomplete="off" />
+          </label>
+          <label class="check-field">
+            <input id="platform-x" type="checkbox" checked />
+            X
+          </label>
+          <label class="check-field">
+            <input id="platform-linkedin" type="checkbox" />
+            LinkedIn
+          </label>
+          <label class="check-field">
+            <input id="demo-mode" type="checkbox" checked />
+            Demo data
+          </label>
+          <button type="submit">Scan</button>
+          <button type="button" id="seed-button">Load seed</button>
+        </form>
+
+        <div id="health-pill" class="health-pill">Checking</div>
+      </header>
+
+      <main class="workspace">
+        <section class="panel stream-panel">
+          <div class="panel-head">
+            <h2>Agent stream</h2>
+            <div id="scan-status" class="status-text">Idle</div>
+          </div>
+          <div id="event-stream" class="event-stream"></div>
+        </section>
+
+        <section class="panel leaderboard-panel">
+          <div class="panel-head">
+            <h2>Redis leaderboard</h2>
+            <div id="fan-count" class="status-text">0 fans</div>
+          </div>
+          <div id="leaderboard" class="leaderboard"></div>
+        </section>
+
+        <section class="panel detail-panel">
+          <div class="panel-head">
+            <h2>Fan detail</h2>
+            <div id="selected-score" class="status-text">No selection</div>
+          </div>
+          <div id="fan-detail" class="fan-detail"></div>
+          <div class="answer-box">
+            <div class="answer-actions">
+              <button id="ask-button" type="button">Ask FanIQ</button>
+              <button id="publish-button" type="button">Publish</button>
+            </div>
+            <div id="vapi-answer" class="vapi-answer">Ask FanIQ who matters most and what to do next.</div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="trace-row">
+        <section class="panel publish-panel">
+          <div class="panel-head">
+            <h2>Publish log</h2>
+            <div id="publish-status" class="status-text">Local adapter ready</div>
+          </div>
+          <div id="publish-log" class="trace-list"></div>
+        </section>
+
+        <section class="panel sponsor-panel">
+          <div class="panel-head">
+            <h2>Sponsor trace</h2>
+            <div id="sponsor-status" class="status-text">TinyFish · Redis · Vapi · Shipables</div>
+          </div>
+          <div id="sponsor-trace" class="trace-list"></div>
+        </section>
+      </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

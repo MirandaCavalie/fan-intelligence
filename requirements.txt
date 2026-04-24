@@ -1,0 +1,8 @@
+fastapi>=0.115.0,<0.116.0
+uvicorn[standard]>=0.34.3,<0.36.0
+redis>=6.2.0,<7.0.0
+httpx>=0.28.1,<0.29.0
+anthropic>=0.34.0,<1.0.0
+python-dotenv>=1.1.0,<2.0.0
+pydantic>=2.8.0,<3.0.0
+python-jose==3.3.0

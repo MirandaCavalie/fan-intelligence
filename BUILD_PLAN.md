@@ -3,6 +3,8 @@
 > 5.5 hours. DEMO.md is the north star. Build only what serves the demo.
 > Cut anything that doesn't appear in the 3-minute script.
 
+Current implementation path: build seeded Redis leaderboard, one-screen UI, Vapi Mode A, Tinyfish-visible scan stream, local publish log, and Shipables first. Treat Ghost, LinkedIn, Vapi Mode B, live cited.md, and x402 as optional sponsor depth after the demo path works.
+
 ---
 
 ## Team roles

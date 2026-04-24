@@ -1,0 +1,33 @@
+{
+  "version": "0.1.0",
+  "keywords": ["fan-intelligence", "creator-tools", "redis", "vapi", "tinyfish"],
+  "categories": ["agents", "creator-tools", "analytics"],
+  "config": {
+    "env": [
+      {
+        "name": "TINYFISH_API_KEY",
+        "description": "TinyFish API key for web-agent discovery.",
+        "required": false,
+        "secret": true
+      },
+      {
+        "name": "REDIS_URL",
+        "description": "Redis connection string for scoring and profile state.",
+        "required": true,
+        "secret": true
+      },
+      {
+        "name": "VAPI_API_KEY",
+        "description": "Vapi API key for dashboard assistant integration.",
+        "required": false,
+        "secret": true
+      },
+      {
+        "name": "SENSO_API_KEY",
+        "description": "Optional Senso/cited.md API key for live publishing.",
+        "required": false,
+        "secret": true
+      }
+    ]
+  }
+}
