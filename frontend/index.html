@@ -197,9 +197,44 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 40px;
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+      background: var(--paper);
     }
-    .landing-illus { width: 100%; max-width: 400px; height: auto; overflow: visible; }
+    .landing-right::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, var(--paper) 0%, rgba(240, 238, 234, 0.62) 9%, rgba(240, 238, 234, 0) 24%),
+        linear-gradient(180deg, var(--paper) 0%, rgba(240, 238, 234, 0) 16%, rgba(240, 238, 234, 0) 84%, var(--paper) 100%);
+    }
+    .landing-art {
+      position: absolute;
+      inset: -7vh -13vw -8vh -6vw;
+      margin: 0;
+      animation: heroArtIn 650ms ease-out both;
+    }
+    .landing-art-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 45% center;
+      display: block;
+      filter: grayscale(1) contrast(1.18) saturate(0.92);
+      mix-blend-mode: multiply;
+      opacity: 0.93;
+    }
+    .landing-illus { display: none; width: 100%; max-width: 400px; height: auto; overflow: visible; }
+
+    @keyframes heroArtIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
     /* ── SVG ANIMATIONS ── */
     @media (prefers-reduced-motion: no-preference) {
@@ -855,8 +890,17 @@
       </div>
     </div>
 
-    <!-- Right: animated SVG illustration -->
+    <!-- Right: generated editorial illustration -->
     <div class="landing-right">
+      <figure class="landing-art" aria-label="FanIQ discovers high-signal fans">
+        <img
+          class="landing-art-img"
+          src="/static/assets/faniq-hero-fans.png"
+          alt="Creator surrounded by high-signal fans and fan intelligence signals"
+          decoding="async"
+          fetchpriority="high"
+        />
+      </figure>
       <svg class="landing-illus" viewBox="0 0 460 390" fill="none"
            xmlns="http://www.w3.org/2000/svg"
            stroke-linecap="round" stroke-linejoin="round">
