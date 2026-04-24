@@ -21,7 +21,7 @@ async def health() -> dict[str, str]:
         "status": "ok" if redis_state == "connected" else "degraded",
         "redis": redis_state,
         "tinyfish": "configured" if os.getenv("TINYFISH_API_KEY") else "missing",
-        "vapi": "ready",
+        "vapi": "api_configured" if os.getenv("VAPI_API_KEY") else "custom_llm_ready",
         "publisher": "senso" if os.getenv("SENSO_API_KEY") and os.getenv("SENSO_API_URL") else "local",
         "ghost_build": "installed" if ghost_status["installed"] else "missing",
         "mode": os.getenv("APP_MODE", "demo"),

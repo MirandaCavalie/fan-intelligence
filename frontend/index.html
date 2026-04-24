@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>FanIQ</title>
-    <link rel="stylesheet" href="/static/styles.css?v=redis-ai" />
+    <link rel="stylesheet" href="/static/styles.css?v=vapi-voice" />
   </head>
   <body>
     <div class="app-shell">
@@ -70,6 +70,21 @@
               <button id="publish-button" type="button">Publish</button>
             </div>
             <div id="vapi-answer" class="vapi-answer">Ask FanIQ who matters most and what to do next.</div>
+            <div class="voice-box">
+              <div class="voice-head">
+                <div>
+                  <div class="voice-title">Vapi voice</div>
+                  <div id="vapi-voice-status" class="status-text">Checking voice setup</div>
+                </div>
+                <div id="vapi-call-pill" class="call-pill">idle</div>
+              </div>
+              <div class="voice-actions">
+                <button id="voice-intel-button" type="button">Start FanIQ Voice</button>
+                <button id="voice-persona-button" type="button">Talk to selected fan</button>
+                <button id="voice-end-button" type="button">End call</button>
+              </div>
+              <div id="vapi-transcript" class="voice-transcript">Voice transcript appears here when Vapi is configured.</div>
+            </div>
           </div>
         </section>
       </main>
@@ -101,6 +116,6 @@
       </footer>
     </div>
 
-    <script src="/static/app.js?v=redis-ai"></script>
+    <script src="/static/app.js?v=vapi-voice"></script>
   </body>
 </html>

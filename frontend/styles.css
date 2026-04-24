@@ -386,6 +386,87 @@ h2 {
   line-height: 1.45;
 }
 
+.voice-box {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #121516;
+  padding: 12px;
+}
+
+.voice-head,
+.voice-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.voice-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.voice-actions button:first-child {
+  background: #22302f;
+  border-color: rgba(0, 212, 170, 0.45);
+  color: var(--primary);
+}
+
+.voice-title {
+  font-weight: 700;
+}
+
+.call-pill {
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  min-width: 58px;
+  padding: 4px 8px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.call-pill.live {
+  color: var(--primary);
+  border-color: rgba(0, 212, 170, 0.55);
+  background: rgba(0, 212, 170, 0.08);
+}
+
+.call-pill.warn {
+  color: var(--accent);
+  border-color: rgba(242, 165, 65, 0.45);
+}
+
+.voice-transcript {
+  min-height: 64px;
+  max-height: 128px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--soft);
+  background: #0f1112;
+  padding: 10px;
+  line-height: 1.4;
+}
+
+.transcript-row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding: 6px 0;
+}
+
+.transcript-row:last-child {
+  border-bottom: 0;
+}
+
+.transcript-row strong {
+  color: var(--primary);
+}
+
 .trace-list {
   min-height: 116px;
   max-height: 170px;

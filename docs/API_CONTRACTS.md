@@ -171,9 +171,31 @@ If using custom LLM:
 
 ```text
 POST /vapi/llm
+POST /chat/completions
+POST /v1/chat/completions
 ```
 
-The endpoint should inject Redis fan data into the model context and return an OpenAI-compatible response.
+The endpoint injects Redis fan data into the model context and returns an OpenAI-compatible response.
+
+Use `stream: true` for Vapi voice calls. The streaming response is `text/event-stream` with OpenAI-style `chat.completion.chunk` events and a final `data: [DONE]`.
+
+Mode selection:
+
+```json
+{"model": "faniq-intelligence"}
+```
+
+```json
+{"model": "faniq-persona:@lexfridman:@airesearcher_sf"}
+```
+
+Browser voice config:
+
+```text
+GET /vapi/client-config?creator_handle=@lexfridman&fan_handle=@airesearcher_sf
+```
+
+Response includes `VAPI_PUBLIC_KEY` and generated assistant IDs only; it never exposes `VAPI_API_KEY`.
 
 ## Redis AI Memory Search
 

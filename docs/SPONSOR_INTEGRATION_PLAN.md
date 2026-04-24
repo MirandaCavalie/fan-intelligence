@@ -101,9 +101,11 @@ Assistant:
 
 Option A - Custom LLM endpoint:
 
-- Vapi calls `/vapi/llm`.
+- Vapi calls `/v1/chat/completions` through the Custom LLM adapter.
 - Backend injects Redis top fan context.
-- Backend streams/returns model response.
+- Backend streams/returns OpenAI-compatible model responses.
+- Mode A uses `faniq-intelligence`.
+- Mode B uses `faniq-persona:{creator}:{fan}` and must be framed as synthetic.
 
 Option B - Custom tool endpoint:
 
@@ -202,4 +204,3 @@ Redis-only profile store.
 Pitch:
 
 - If Ghost is not working, do not pitch it as live. Keep it in README as planned optional integration.
-

@@ -56,6 +56,7 @@ The root docs are the public project narrative. The implementation control room 
 - [`docs/SPONSOR_INTEGRATION_PLAN.md`](docs/SPONSOR_INTEGRATION_PLAN.md) - MVP sponsor plan and fallbacks
 - [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md) - backend/API contracts
 - [`docs/REDIS_AI_INCUBATOR.md`](docs/REDIS_AI_INCUBATOR.md) - Redis Cloud + agent memory layer
+- [`docs/VAPI_VOICE_SETUP.md`](docs/VAPI_VOICE_SETUP.md) - Vapi Custom LLM + Web SDK setup
 - [`docs/IMPLEMENTATION_CUTS.md`](docs/IMPLEMENTATION_CUTS.md) - cut order if time gets tight
 - [`docs/GHOST_BUILD_SETUP.md`](docs/GHOST_BUILD_SETUP.md) - optional Ghost Build / MCP setup
 
