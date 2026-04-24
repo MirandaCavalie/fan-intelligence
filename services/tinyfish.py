@@ -2,15 +2,19 @@ from __future__ import annotations
 
 import asyncio
 import os
+import json
 from datetime import datetime, timezone
 from typing import AsyncIterator
 
 import httpx
+from dotenv import load_dotenv
 
 from models.fan import FanProfile, normalize_handle
 from models.job import ScanEvent
 from services.scorer import score_profile
 from services.seed_data import demo_fans
+
+load_dotenv()
 
 
 def event(type_: str, sponsor: str, message: str, **extra: object) -> ScanEvent:
@@ -59,17 +63,23 @@ async def live_tinyfish_probe(creator_handle: str) -> AsyncIterator[ScanEvent | 
                 f"{base_url}/automation/run-sse",
                 headers={"X-API-Key": api_key, "Content-Type": "application/json"},
                 json={
-                    "url": "https://news.ycombinator.com/",
+                    "url": "https://news.ycombinator.com/jobs",
                     "goal": (
-                        "Find five visible commenters or story authors on the page. "
-                        "Return JSON-like objects with handle, display_name, and comment text."
+                        "Extract the first 15 job postings. For each, get the full title text as shown on the page, "
+                        "the URL it links to, and the posting date. Return as JSON array with keys: title, url, posted."
                     ),
                 },
             ) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line.startswith("data:"):
-                        yield event("agent_step", "tinyfish", line[5:].strip()[:240])
+                        payload = line[5:].strip()
+                        yield event("agent_step", "tinyfish", payload[:240])
+                        try:
+                            if json.loads(payload).get("type") == "COMPLETE":
+                                break
+                        except Exception:
+                            pass
         for fan in demo_fans(creator, source_tool="tinyfish_live")[:5]:
             fan.last_seen = datetime.now(timezone.utc)
             yield score_profile(fan)
