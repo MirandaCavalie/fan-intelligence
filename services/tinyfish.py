@@ -24,6 +24,23 @@ TINYFISH_PROBE_GOAL = (
     "the URL it links to, and the posting date. Return as JSON array with keys: title, url, posted."
 )
 HANDLE_RE = re.compile(r"(?<![\w])@([A-Za-z0-9_]{2,30})")
+CREATOR_QUERY_ALIASES = {
+    "@sama": "Sam Altman",
+    "@lexfridman": "Lex Fridman",
+    "@paulg": "Paul Graham",
+    "@karpathy": "Andrej Karpathy",
+    "@elonmusk": "Elon Musk",
+}
+
+
+def _creator_query_text(creator_handle: str) -> str:
+    creator = normalize_handle(creator_handle)
+    return CREATOR_QUERY_ALIASES.get(creator.lower(), creator.lstrip("@"))
+
+
+def _hn_discovery_url(creator_handle: str) -> str:
+    query = quote_plus(_creator_query_text(creator_handle))
+    return f"https://hn.algolia.com/api/v1/search?query={query}&tags=comment&hitsPerPage=8"
 
 
 def event(type_: str, sponsor: str, message: str, **extra: object) -> ScanEvent:
@@ -48,11 +65,12 @@ def _count_result_items(result: object) -> int:
 def _creator_discovery_url(creator_handle: str) -> str:
     creator = normalize_handle(creator_handle)
     handle = creator.lstrip("@")
-    query = quote_plus(f'"{creator}" social comments replies fans')
+    query_text = _creator_query_text(creator)
+    query = quote_plus(query_text)
     template = os.getenv("TINYFISH_DISCOVERY_URL_TEMPLATE")
     if template:
-        return template.format(creator=creator, handle=handle, query=query)
-    return f"https://www.google.com/search?q={query}"
+        return template.format(creator=creator, handle=handle, query=query, query_text=query_text)
+    return _hn_discovery_url(creator)
 
 
 def _creator_discovery_goal(creator_handle: str) -> str:
@@ -60,13 +78,14 @@ def _creator_discovery_goal(creator_handle: str) -> str:
     template = os.getenv("TINYFISH_DISCOVERY_GOAL")
     if template:
         return template.format(creator=creator, handle=creator.lstrip("@"))
+    query_text = _creator_query_text(creator)
     return (
-        f"Find public web or social evidence of people engaging with creator {creator}. "
-        "Extract up to 8 likely fan, community, or ecosystem accounts from the page and linked public results. "
-        "Return only a JSON array. Each object should include: handle if visible, display_name, platform, "
-        "bio or snippet, source_url, source_text, follower_count if visible, comment_count if inferable, "
-        "and reply_count if inferable. If you cannot find direct fan accounts, return public engagement-related "
-        f"profiles or pages that mention {creator}. Do not invent private facts."
+        f"Extract up to 8 public commenters engaging with content or discussions about {query_text} ({creator}) "
+        "from this Hacker News Algolia JSON page. Return only a JSON array. Each object must include: "
+        "handle as the author username prefixed with @, display_name as the author username, "
+        'platform="hackernews", source_url as the Hacker News item URL if available, '
+        "source_text as the comment text or highlighted comment text, comment_count=1, reply_count=1, "
+        "and follower_count=0. Do not browse Google. Do not invent private facts."
     )
 
 
@@ -181,6 +200,8 @@ def _platform_from_item(item: dict[str, Any], source_url: str) -> str:
     raw = _clean_text(item.get("platform") or item.get("source") or source_url, 80).lower()
     if any(token in raw for token in ("twitter", "x.com", "twstalker", "nitter")):
         return "x"
+    if any(token in raw for token in ("hackernews", "news.ycombinator", "hn.algolia")):
+        return "hackernews"
     if "linkedin" in raw:
         return "linkedin"
     if "instagram" in raw:
@@ -207,14 +228,44 @@ def _handle_from_url(source_url: str, creator_handle: str) -> str:
     return normalize_handle(first_path)
 
 
+def _source_url_from_item(item: dict[str, Any]) -> str:
+    source_url = _clean_text(item.get("source_url") or item.get("url") or item.get("link"), 500)
+    if source_url:
+        return source_url
+    object_id = _clean_text(item.get("objectID") or item.get("comment_id") or item.get("id"), 80)
+    if object_id:
+        return f"https://news.ycombinator.com/item?id={object_id}"
+    return ""
+
+
+def _source_text_from_item(item: dict[str, Any]) -> str:
+    highlight = item.get("_highlightResult")
+    highlighted_comment = ""
+    if isinstance(highlight, dict):
+        comment = highlight.get("comment_text")
+        if isinstance(comment, dict):
+            highlighted_comment = _clean_text(comment.get("value"), 500)
+    return _clean_text(
+        item.get("source_text")
+        or item.get("comment_text")
+        or highlighted_comment
+        or item.get("snippet")
+        or item.get("bio")
+        or item.get("description")
+        or item.get("story_title")
+        or item.get("title"),
+        500,
+    )
+
+
 def _handle_from_item(item: dict[str, Any], creator_handle: str) -> str:
     creator = normalize_handle(creator_handle).lower()
-    for key in ("handle", "username", "account", "screen_name"):
+    for key in ("handle", "username", "author", "account", "screen_name"):
         value = _clean_text(item.get(key), 80)
         if value and value.lower() not in {creator, creator.lstrip("@")}:
             return normalize_handle(value)
 
-    source_url = _clean_text(item.get("source_url") or item.get("url") or item.get("link"), 500)
+    source_url = _source_url_from_item(item)
     url_handle = _handle_from_url(source_url, creator)
     if url_handle:
         return url_handle
@@ -231,7 +282,7 @@ def _handle_from_item(item: dict[str, Any], creator_handle: str) -> str:
 
 
 def _display_name_from_item(item: dict[str, Any], handle: str) -> str:
-    for key in ("display_name", "name", "title", "author"):
+    for key in ("display_name", "name", "author", "title"):
         value = _clean_text(item.get(key), 80)
         if value:
             return value
@@ -250,15 +301,8 @@ def _live_fans_from_result(result: Any, creator_handle: str, limit: int = 8) -> 
             continue
         seen.add(handle.lower())
 
-        source_url = _clean_text(item.get("source_url") or item.get("url") or item.get("link"), 500)
-        source_text = _clean_text(
-            item.get("source_text")
-            or item.get("snippet")
-            or item.get("bio")
-            or item.get("description")
-            or item.get("title"),
-            500,
-        )
+        source_url = _source_url_from_item(item)
+        source_text = _source_text_from_item(item)
         display_name = _display_name_from_item(item, handle)
         platform = _platform_from_item(item, source_url)
         rank_bonus = max(0, 8 - index)
@@ -283,6 +327,22 @@ def _live_fans_from_result(result: Any, creator_handle: str, limit: int = 8) -> 
             break
 
     return fans
+
+
+async def _public_engagement_fallback(creator_handle: str) -> list[FanProfile]:
+    """Reliable live fallback for demo continuity when TinyFish returns a blocked/empty result."""
+    url = _hn_discovery_url(creator_handle)
+    async with httpx.AsyncClient(timeout=20) as client:
+        response = await client.get(url)
+        response.raise_for_status()
+        payload = response.json()
+    hits = payload.get("hits") if isinstance(payload, dict) else []
+    return _live_fans_from_result({"results": hits or []}, creator_handle)
+
+
+def _quick_live_fallback_enabled() -> bool:
+    raw = os.getenv("TINYFISH_QUICK_LIVE_FALLBACK", "true").strip().lower()
+    return raw not in {"0", "false", "no", "off"}
 
 
 async def demo_scan_stream(creator_handle: str) -> AsyncIterator[ScanEvent | FanProfile]:
@@ -321,6 +381,9 @@ async def live_tinyfish_probe(creator_handle: str) -> AsyncIterator[ScanEvent | 
     target_url = _creator_discovery_url(creator)
     goal = _creator_discovery_goal(creator)
     result: Any | None = None
+    quick_fallback_task: asyncio.Task[list[FanProfile]] | None = None
+    if _quick_live_fallback_enabled():
+        quick_fallback_task = asyncio.create_task(_public_engagement_fallback(creator))
     yield event("agent_step", "tinyfish", f"Starting live TinyFish creator discovery for {creator}")
     try:
         async with httpx.AsyncClient(timeout=60) as client:
@@ -344,6 +407,24 @@ async def live_tinyfish_probe(creator_handle: str) -> AsyncIterator[ScanEvent | 
                         )
                         if scan_event:
                             yield scan_event
+                        if quick_fallback_task and quick_fallback_task.done():
+                            try:
+                                fallback_fans = quick_fallback_task.result()
+                            except Exception:
+                                fallback_fans = []
+                            if fallback_fans:
+                                yield event(
+                                    "agent_step",
+                                    "faniq",
+                                    (
+                                        f"Converted {len(fallback_fans)} live public engagement records while "
+                                        "TinyFish browser stream continues in the trace"
+                                    ),
+                                )
+                                for fan in fallback_fans:
+                                    await asyncio.sleep(0.12)
+                                    yield fan
+                                return
                         if complete_result is not None:
                             result = complete_result
                         if is_complete:
@@ -351,6 +432,17 @@ async def live_tinyfish_probe(creator_handle: str) -> AsyncIterator[ScanEvent | 
 
         live_fans = _live_fans_from_result(result, creator)
         if not live_fans:
+            fallback_fans = await _public_engagement_fallback(creator)
+            if fallback_fans:
+                yield event(
+                    "agent_step",
+                    "faniq",
+                    f"TinyFish returned no parseable handles, so FanIQ converted {len(fallback_fans)} live public engagement records from the same source.",
+                )
+                for fan in fallback_fans:
+                    await asyncio.sleep(0.12)
+                    yield fan
+                return
             yield event(
                 "agent_step",
                 "tinyfish",
@@ -363,4 +455,22 @@ async def live_tinyfish_probe(creator_handle: str) -> AsyncIterator[ScanEvent | 
             await asyncio.sleep(0.12)
             yield fan
     except Exception as exc:
-        yield event("error", "tinyfish", f"Live TinyFish path failed: {exc}. Use Demo data mode for the seeded fallback.")
+        if quick_fallback_task and not quick_fallback_task.done():
+            quick_fallback_task.cancel()
+        yield event("error", "tinyfish", f"Live TinyFish path failed: {exc}. Trying FanIQ public engagement fallback.")
+        try:
+            fallback_fans = await _public_engagement_fallback(creator)
+        except Exception as fallback_exc:
+            yield event(
+                "error",
+                "faniq",
+                f"Public engagement fallback failed: {fallback_exc}. Use Demo data mode for the seeded fallback.",
+            )
+            return
+        if not fallback_fans:
+            yield event("error", "faniq", "Public engagement fallback returned no fan-like records.")
+            return
+        yield event("agent_step", "faniq", f"Converted {len(fallback_fans)} fallback public engagement records into FanIQ profiles")
+        for fan in fallback_fans:
+            await asyncio.sleep(0.12)
+            yield fan
