@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web/dist/vapi.js" defer></script>
   <style>
     /* ── DESIGN TOKENS ── */
     :root {
@@ -1239,6 +1238,10 @@ const S = {
   fans: [],               // array of fan objects, sorted by score desc
   selectedFan: null,
   vapiInst: null,
+  vapiSdk: null,
+  demoUtterance: null,
+  vapiWatchdog: null,
+  vapiLive: false,
   scanDone: false,
 };
 
@@ -1567,54 +1570,218 @@ async function fetchVapiCfg(creatorHandle, fanHandle) {
   return res.json();
 }
 
-async function startIntelCall() {
-  if (typeof Vapi === 'undefined') {
-    addTranscript('system', 'Vapi SDK not loaded — check CDN connectivity.');
-    return;
+async function loadVapiSdk() {
+  if (S.vapiSdk) return S.vapiSdk;
+  if (window.Vapi) {
+    S.vapiSdk = window.Vapi;
+    return S.vapiSdk;
   }
+  try {
+    const mod = await import('https://esm.sh/@vapi-ai/web?bundle');
+    const sdk = mod.default || mod.Vapi;
+    if (!sdk) throw new Error('Vapi SDK module did not export a client');
+    S.vapiSdk = sdk;
+    return sdk;
+  } catch (err) {
+    console.warn('Vapi SDK load failed; using demo voice fallback.', err);
+    return null;
+  }
+}
+
+function waitReject(ms, message) {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(message)), ms);
+  });
+}
+
+function clearVapiWatchdog() {
+  if (S.vapiWatchdog) {
+    clearTimeout(S.vapiWatchdog);
+    S.vapiWatchdog = null;
+  }
+}
+
+function armVapiFallback(reason, ms = 5000) {
+  clearVapiWatchdog();
+  S.vapiWatchdog = setTimeout(() => {
+    if (!S.vapiLive) startDemoIntelCall(reason);
+  }, ms);
+}
+
+function showCallUi(name, clearTranscript = true) {
+  $('call-name').textContent = name;
+  $('call-ui').classList.add('vis');
+  if (clearTranscript) $('transcript').innerHTML = '';
+}
+
+function openAiContent(payload) {
+  return payload?.choices?.[0]?.message?.content
+    || payload?.choices?.[0]?.delta?.content
+    || 'FanIQ could not generate a voice answer yet.';
+}
+
+function speakDemo(text) {
+  if (!('speechSynthesis' in window) || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.98;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    utterance.onend = () => resetVapiBtns();
+    utterance.onerror = () => resetVapiBtns();
+    S.demoUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
+  } catch (err) {
+    console.warn('Demo voice synthesis failed.', err);
+  }
+}
+
+async function startDemoIntelCall(reason) {
+  clearVapiWatchdog();
+  destroyVapi();
+  S.vapiLive = false;
   const btn = $('btn-intel');
-  btn.textContent = 'Connecting…'; btn.disabled = true;
+  showCallUi('FanIQ demo voice');
+  addTranscript('system', reason || 'Using Vapi-compatible demo voice path.');
+  addTranscript('user', 'Who are my top three fans and what should I do with them?');
+  try {
+    const response = await fetch('/vapi/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'faniq-intelligence',
+        metadata: { creator_handle: withAt(S.handle) },
+        messages: [
+          { role: 'user', content: 'Who are my top three fans and what should I do with them?' },
+        ],
+      }),
+    });
+    if (!response.ok) throw new Error('answer endpoint returned ' + response.status);
+    const payload = await response.json();
+    const answer = openAiContent(payload);
+    addTranscript('assistant', answer);
+    speakDemo(answer);
+  } catch (err) {
+    addTranscript('system', 'Mode A demo fallback failed: ' + err.message);
+    resetVapiBtns();
+  } finally {
+    btn.textContent = 'Start call';
+    btn.disabled = false;
+  }
+}
+
+async function startDemoPersonaCall(fan, reason) {
+  clearVapiWatchdog();
+  destroyVapi();
+  S.vapiLive = false;
+  const btn = $('btn-persona');
+  showCallUi((fan.display_name || fan.handle) + ' demo voice');
+  addTranscript('system', reason || 'Using synthetic persona demo voice path.');
+  addTranscript('user', 'Why do you engage with this creator?');
+  try {
+    const response = await fetch('/vapi/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'faniq-persona:' + withAt(S.handle) + ':' + withAt(fan.handle),
+        metadata: { creator_handle: withAt(S.handle), fan_handle: withAt(fan.handle) },
+        messages: [
+          { role: 'user', content: 'Why do you engage with this creator?' },
+        ],
+      }),
+    });
+    if (!response.ok) throw new Error('answer endpoint returned ' + response.status);
+    const payload = await response.json();
+    const answer = openAiContent(payload);
+    addTranscript('assistant', answer);
+    speakDemo(answer);
+  } catch (err) {
+    addTranscript('system', 'Persona demo fallback failed: ' + err.message);
+    resetVapiBtns();
+  } finally {
+    btn.textContent = 'Start call';
+    btn.disabled = false;
+  }
+}
+
+async function startIntelCall() {
+  const btn = $('btn-intel');
+  btn.textContent = 'Connecting...'; btn.disabled = true;
   try {
     const cfg = await fetchVapiCfg(S.handle);
+    const VapiClient = await loadVapiSdk();
+    if (!cfg.configured || !VapiClient || !cfg.vapi_public_key || !cfg.intelligence_assistant_id) {
+      const reason = cfg.configured
+        ? 'Vapi SDK unavailable in this browser; using the same Redis-grounded Mode A answer path.'
+        : 'Vapi assistant config missing; using Redis-grounded Mode A demo voice.';
+      await startDemoIntelCall(reason);
+      return;
+    }
     destroyVapi();
-    S.vapiInst = new Vapi(cfg.vapi_public_key);
+    $('call-ui').classList.remove('vis');
+    $('transcript').innerHTML = '';
+    S.vapiLive = false;
+    showCallUi('FanIQ connecting');
+    addTranscript('system', 'Connecting live Vapi Mode A...');
+    S.vapiInst = new VapiClient(cfg.vapi_public_key);
     wireVapiEvents('FanIQ');
-    await S.vapiInst.start(cfg.intelligence_assistant_id);
+    armVapiFallback('Live Vapi did not reach call-start, likely due to browser microphone permissions. Using Redis-grounded Mode A demo voice.');
+    await Promise.race([
+      S.vapiInst.start(cfg.intelligence_assistant_id),
+      waitReject(7000, 'Vapi did not start within 7 seconds'),
+    ]);
   } catch(err) {
     console.error('Intel call', err);
-    addTranscript('system', 'Could not start call: ' + err.message);
-    btn.textContent = 'Start call'; btn.disabled = false;
+    if ($('call-ui').classList.contains('vis') && $('call-name').textContent.includes('demo')) return;
+    await startDemoIntelCall('Could not start live Vapi call: ' + err.message + '. Using demo Mode A voice.');
   }
 }
 
 async function startPersonaCall(fan) {
-  if (typeof Vapi === 'undefined') {
-    addTranscript('system', 'Vapi SDK not loaded.');
-    return;
-  }
   const btn = $('btn-persona');
-  btn.textContent = 'Connecting…'; btn.disabled = true;
+  btn.textContent = 'Connecting...'; btn.disabled = true;
   try {
     const cfg = await fetchVapiCfg(S.handle, stripAt(fan.handle));
+    const VapiClient = await loadVapiSdk();
+    if (!cfg.configured || !VapiClient || !cfg.vapi_public_key || !cfg.persona_assistant_id) {
+      await startDemoPersonaCall(fan, 'Persona assistant unavailable; using grounded demo persona voice.');
+      return;
+    }
     destroyVapi();
-    S.vapiInst = new Vapi(cfg.vapi_public_key);
+    $('call-ui').classList.remove('vis');
+    $('transcript').innerHTML = '';
+    S.vapiLive = false;
+    showCallUi((fan.display_name || fan.handle) + ' connecting');
+    addTranscript('system', 'Connecting live Vapi persona...');
+    S.vapiInst = new VapiClient(cfg.vapi_public_key);
     wireVapiEvents(fan.display_name || fan.handle);
-    await S.vapiInst.start(cfg.persona_assistant_id);
+    await Promise.race([
+      S.vapiInst.start(cfg.persona_assistant_id),
+      waitReject(7000, 'Vapi persona did not start within 7 seconds'),
+    ]);
   } catch(err) {
     console.error('Persona call', err);
-    addTranscript('system', 'Could not start persona call: ' + err.message);
-    btn.textContent = 'Start call'; btn.disabled = false;
+    if ($('call-ui').classList.contains('vis') && $('call-name').textContent.includes('demo')) return;
+    await startDemoPersonaCall(fan, 'Could not start live persona call: ' + err.message + '. Using demo persona voice.');
   }
 }
 
 function wireVapiEvents(name) {
   const v = S.vapiInst;
   v.on('call-start', () => {
+    clearVapiWatchdog();
+    S.vapiLive = true;
     $('call-name').textContent = name;
     $('call-ui').classList.add('vis');
     $('transcript').innerHTML = '';
+    addTranscript('system', 'Live Vapi call connected.');
+    $('btn-intel').textContent = 'Call live';
+    $('btn-intel').disabled = true;
   });
   v.on('call-end', () => {
+    clearVapiWatchdog();
+    S.vapiLive = false;
     $('call-ui').classList.remove('vis');
     resetVapiBtns();
   });
@@ -1626,6 +1793,9 @@ function wireVapiEvents(name) {
   v.on('error', err => {
     console.error('Vapi error', err);
     addTranscript('system', String(err?.message || JSON.stringify(err)));
+    if (name === 'FanIQ' && !$('call-ui').classList.contains('vis')) {
+      startDemoIntelCall('Live Vapi error before call-start. Using Redis-grounded Mode A demo voice.');
+    }
   });
 }
 
@@ -1637,6 +1807,12 @@ function resetVapiBtns() {
 }
 
 function destroyVapi() {
+  clearVapiWatchdog();
+  S.vapiLive = false;
+  if ('speechSynthesis' in window) {
+    try { window.speechSynthesis.cancel(); } catch(e) {}
+  }
+  S.demoUtterance = null;
   if (S.vapiInst) {
     try { S.vapiInst.stop(); } catch(e) {}
     S.vapiInst = null;

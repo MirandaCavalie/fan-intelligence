@@ -7,3 +7,4 @@ __pycache__/
 output/published/*.md
 !output/published/.gitkeep
 output/vapi_assistants.json
+output/*.log
